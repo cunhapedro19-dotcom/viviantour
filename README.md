@@ -174,13 +174,22 @@ python3 scripts/generate-artwork.py   # regenera a arte de demonstração (reque
 
 ## ☁️ Deploy (Vercel)
 
-1. Suba o repositório e importe na Vercel.
-2. Configure as variáveis do `.env.local` no projeto.
-3. Em **Settings → Cron Jobs**, confirme o job `*/15 * * * *` de
-   `/api/cron/sync-calendars` (o `vercel.json` já declara). Defina `CRON_SECRET`
-   e o header `Authorization: Bearer <segredo>` será exigido pela rota.
+> **Por que não GitHub Pages?** O Pages só publica arquivos estáticos. O Viviantourr é
+> uma aplicação com servidor (autenticação, reservas, APIs, RLS) — precisa de uma
+> plataforma como **Vercel** (gratuita, feita pelos criadores do Next.js).
+
+1. Acesse [vercel.com](https://vercel.com) → **Add New → Project** → importe o repositório `viviantour`.
+2. Em **Environment Variables**, adicione depois as chaves do Supabase (o modo
+   demonstração funciona sem nenhuma variável).
+3. Clique em **Deploy**. Em ~2 minutos o site estará no ar em `seu-projeto.vercel.app`.
 4. No Supabase, adicione o domínio da Vercel em **Authentication → URL Configuration**
    (Site URL e Redirect URLs, ex.: `https://seu-dominio.vercel.app/auth/callback`).
+
+**Sincronização iCal (cron):** no plano gratuito da Vercel o cron roda 1× ao dia —
+o `vercel.json` já está configurado assim (`0 9 * * *`). Para sincronizar a cada 15
+minutos de graça, cadastre a URL `/api/cron/sync-calendars` (com header
+`Authorization: Bearer <CRON_SECRET>`) em um serviço como o cron-job.org, ou faça
+upgrade do plano Vercel e mude o schedule de volta para `*/15 * * * *`.
 
 ## 🔒 Notas de segurança
 
