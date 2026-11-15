@@ -7,11 +7,12 @@ import { cancelBookingAsProvider, fetchOrgBookings, respondBooking } from "@/lib
 import { usePanelUser } from "@/lib/use-panel-user";
 import type { Booking, BookingStatus } from "@/lib/types";
 
-type Filter = "todas" | "pending" | "confirmed" | "completed" | "cancelled";
+type Filter = "todas" | "pending" | "awaiting_payment" | "confirmed" | "completed" | "cancelled";
 
 const FILTERS: { value: Filter; label: string }[] = [
   { value: "todas", label: "Todas" },
   { value: "pending", label: "Pendentes" },
+  { value: "awaiting_payment", label: "Aguardando pagamento" },
   { value: "confirmed", label: "Confirmadas" },
   { value: "completed", label: "Concluídas" },
   { value: "cancelled", label: "Canceladas / recusadas" },
@@ -72,7 +73,8 @@ export default function ReservasPage() {
       <header>
         <h1 className="font-display text-2xl font-semibold text-tinta">Reservas</h1>
         <p className="mt-1 text-sm text-tinta-mute">
-          Solicitações chegam como <strong>pendentes</strong> — você tem 24h para aceitar ou recusar.
+          Solicitações chegam como <strong>pendentes</strong>. Ao aceitar, o cliente recebe o
+          link de pagamento e a reserva é confirmada automaticamente quando ele paga.
         </p>
       </header>
 
@@ -158,7 +160,7 @@ export default function ReservasPage() {
                   </button>
                 </div>
               )}
-              {b.status === "confirmed" && (
+              {["confirmed", "awaiting_payment"].includes(b.status) && (
                 <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-areia-200 pt-4">
                   <button type="button" disabled={busyId === b.id} onClick={() => act(b, "cancel")} className="btn-danger btn-sm">
                     Cancelar reserva

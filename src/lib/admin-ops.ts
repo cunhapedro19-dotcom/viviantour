@@ -40,6 +40,7 @@ export async function fetchAdminKpis(): Promise<{
   listingsPublished: number;
   listingsPending: number;
   bookingsCount: number;
+  awaitingPayment: number;
   gmvCents: number;
   commissionCents: number;
 }> {
@@ -54,22 +55,32 @@ export async function fetchAdminKpis(): Promise<{
         demoTours.filter((t) => t.status === "published").length,
       listingsPending: 2, // fila simulada na demonstração
       bookingsCount: bookings.length,
+      awaitingPayment: bookings.filter((b) => b.status === "awaiting_payment").length,
       gmvCents: confirmed.reduce((s, b) => s + b.totalCents, 0),
       commissionCents: confirmed.reduce((s, b) => s + b.commissionCents, 0),
     };
   }
 
   const sb = getSupabaseBrowserClient();
-  const [orgsActive, orgsPending, staysPublished, toursPublished, staysPending, toursPending, bookingsRes] =
-    await Promise.all([
-      countOf(sb, "organizations", ["status", "active"]),
-      countOf(sb, "organizations", ["status", "pending"]),
-      countOf(sb, "properties", ["status", "published"]),
-      countOf(sb, "services", ["status", "published"]),
-      countOf(sb, "properties", ["status", "pending_review"]),
-      countOf(sb, "services", ["status", "pending_review"]),
-      sb.from("bookings").select("total_cents, commission_cents, status"),
-    ]);
+  const [
+    orgsActive,
+    orgsPending,
+    staysPublished,
+    toursPublished,
+    staysPending,
+    toursPending,
+    awaitingPayment,
+    bookingsRes,
+  ] = await Promise.all([
+    countOf(sb, "organizations", ["status", "active"]),
+    countOf(sb, "organizations", ["status", "pending"]),
+    countOf(sb, "properties", ["status", "published"]),
+    countOf(sb, "services", ["status", "published"]),
+    countOf(sb, "properties", ["status", "pending_review"]),
+    countOf(sb, "services", ["status", "pending_review"]),
+    countOf(sb, "bookings", ["status", "awaiting_payment"]),
+    sb.from("bookings").select("total_cents, commission_cents, status"),
+  ]);
 
   const bookings = (bookingsRes.data ?? []) as { total_cents: number; commission_cents: number; status: string }[];
   const confirmed = bookings.filter((b) => ["confirmed", "completed"].includes(b.status));
@@ -80,6 +91,7 @@ export async function fetchAdminKpis(): Promise<{
     listingsPublished: staysPublished + toursPublished,
     listingsPending: staysPending + toursPending,
     bookingsCount: bookings.length,
+    awaitingPayment,
     gmvCents: confirmed.reduce((s, b) => s + Number(b.total_cents), 0),
     commissionCents: confirmed.reduce((s, b) => s + Number(b.commission_cents), 0),
   };

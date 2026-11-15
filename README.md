@@ -54,7 +54,10 @@ No menu lateral: **SQL Editor → New query**.
 
 1. Cole todo o conteúdo de `supabase/migrations/0001_init.sql` e execute (**Run**).
    Cria tabelas, índices, RLS, funções de reserva e o bucket de mídia.
-2. Novo query: cole `supabase/seed.sql` e execute.
+2. Novo query: cole `supabase/migrations/0002_payments.sql` e execute.
+   Ativa o fluxo de pagamento: `respond_booking` passa a colocar a reserva em
+   *aguardando pagamento* e a RPC `record_payment` confirma quando o cliente paga.
+3. Novo query: cole `supabase/seed.sql` e execute.
    Cria categorias, comodidades e a regra de comissão padrão (10%).
 
 ### 3. Configure as variáveis de ambiente
@@ -87,6 +90,30 @@ Por padrão o Supabase exige confirmação de e-mail. Para testes locais sem e-m
 
 ---
 
+## 💳 Pagamentos
+
+O fluxo ficou assim:
+
+1. **Viajante solicita** → reserva entra como *pendente* (datas ainda livres).
+2. **Fornecedor aceita** → datas são bloqueadas e a reserva fica *aguardando pagamento*.
+3. **Viajante paga** em `/pagamento/<reserva>` → reserva *confirmada* automaticamente
+   e a comissão registrada.
+
+Duas formas de pagamento (a segunda exige configuração):
+
+- **Manual** (padrão, sem nenhuma chave): o cliente confirma o pagamento na própria
+  página — útil para acerto direto (Pix, na entrada da hospedagem etc.).
+- **Mercado Pago Checkout Pro**: defina `MERCADOPAGO_ACCESS_TOKEN` (server-side, no
+  `.env.local` ou na Vercel). O botão de pagamento redireciona para o checkout do
+  Mercado Pago e o webhook `/api/webhooks/mercadopago` confirma a reserva
+  automaticamente. No painel do Mercado Pago, cadastre a URL de notificação:
+  `https://SEU-DOMINIO/api/webhooks/mercadopago`.
+
+> O webhook nunca confia no corpo da requisição: ele reconsulta a API do Mercado Pago
+> com o token secreto antes de registrar o pagamento.
+
+---
+
 ## 🗺️ Roadmap de fases (status)
 
 | Fase | Escopo | Status |
@@ -97,7 +124,7 @@ Por padrão o Supabase exige confirmação de e-mail. Para testes locais sem e-m
 | 4 | Cadastro e publicação de anúncios | ✅ Entregue (imóveis e passeios, fotos, tarifas, fluxo de aprovação) |
 | 5 | Calendários e disponibilidade | ✅ Entregue (bloqueios manuais, iCal de entrada e saída, cron de sincronização) |
 | 6 | Sistema de reservas | ✅ Entregue (solicitação → aceitação → confirmação, com controle de concorrência no banco) |
-| 7 | Comissões e pagamentos | 🟡 Fundação pronta (regras de comissão ativas; gateway/split na próxima etapa) |
+| 7 | Comissões e pagamentos | ✅ Entregue (checkout Mercado Pago ou confirmação manual; comissão na aceitação; confirmação automática da reserva) |
 | 8 | Relatórios, notificações e otimizações | 🟡 Parcial (painel admin com KPIs; notificações gravadas no banco; upload de fotos, e-mails e relatórios avançados pendentes) |
 
 ---
@@ -111,6 +138,7 @@ Next.js 14 (App Router, TypeScript) ── Tailwind CSS
         ├── PostgreSQL + Row Level Security (isolamento multi-tenant)
         ├── RPCs de reserva (controle de concorrência no banco)
         ├── Supabase Storage (bucket "media", pronto p/ upload)
+        ├── Webhook /api/webhooks/mercadopago (confirmação automática de pagamento)
         └── Cron /api/cron/sync-calendars (iCal de entrada + conclusão de reservas)
 ```
 
@@ -130,7 +158,10 @@ Next.js 14 (App Router, TypeScript) ── Tailwind CSS
   - *Saída*: cada imóvel tem um `feed_token`; `/api/calendars/<token>` gera ICS com as
     reservas/bloqueios para o anfitrião importar no Airbnb/Booking.
 - **Comissões**: regra global → categoria → organização (a mais específica vence).
-  Aplicada na confirmação via `respond_booking`, registrada em `commissions`.
+  Aplicada na aceitação via `respond_booking`, registrada em `commissions`.
+- **Pagamentos**: a reserva só é confirmada quando o pagamento é aprovado
+  (`record_payment`), via Mercado Pago ou confirmação manual. Cancelar uma reserva
+  com pagamento aprovado marca reembolso automaticamente.
 
 ### Modelo de dados (principais)
 
@@ -147,18 +178,21 @@ Next.js 14 (App Router, TypeScript) ── Tailwind CSS
 ```
 src/
   app/
-    (site)/            → marketplace público (home, /buscar, /hospedagem/[slug], /passeio/[slug], /sobre, /anuncie, /entrar, /cadastro, /minhas-viagens, /favoritos)
+    (site)/            → marketplace público (home, /buscar, /hospedagem/[slug], /passeio/[slug], /sobre, /anuncie, /entrar, /cadastro, /minhas-viagens, /favoritos, /pagamento/[id])
     painel/            → painel do fornecedor (imóveis, passeios, saídas, reservas, financeiro)
     admin/             → painel Viviantourr (dashboard, fornecedores, anúncios, reservas)
     api/
       cron/sync-calendars/  → sincronização iCal + conclusão de reservas (protegida por CRON_SECRET)
       calendars/[token]/    → feed ICS de disponibilidade por imóvel
+      payments/checkout/    → cria a preferência de checkout (Mercado Pago) ou modo manual
+      webhooks/mercadopago/ → notificações do Mercado Pago (confirmação automática)
     auth/callback/     → troca de código do Supabase Auth
   components/          → UI (cards, widgets de reserva, calendário, painéis)
   lib/                 → config, tipos, queries (demo/Supabase), iCal, demo-store, ops dos painéis
 supabase/
-  migrations/0001_init.sql  → schema completo + RLS + funções
-  seed.sql                  → dados de referência + promoção de admin
+  migrations/0001_init.sql      → schema completo + RLS + funções
+  migrations/0002_payments.sql  → fluxo de pagamento (aguardando pagamento + record_payment)
+  seed.sql                      → dados de referência + promoção de admin
 scripts/generate-artwork.py → regenera as imagens ilustradas de demonstração
 public/img/                 → arte gerada (42 imagens)
 ```
@@ -180,7 +214,8 @@ python3 scripts/generate-artwork.py   # regenera a arte de demonstração (reque
 
 1. Acesse [vercel.com](https://vercel.com) → **Add New → Project** → importe o repositório `viviantour`.
 2. Em **Environment Variables**, adicione depois as chaves do Supabase (o modo
-   demonstração funciona sem nenhuma variável).
+   demonstração funciona sem nenhuma variável). Para cobrança online, adicione
+   também `MERCADOPAGO_ACCESS_TOKEN` (opcional).
 3. Clique em **Deploy**. Em ~2 minutos o site estará no ar em `seu-projeto.vercel.app`.
 4. No Supabase, adicione o domínio da Vercel em **Authentication → URL Configuration**
    (Site URL e Redirect URLs, ex.: `https://seu-dominio.vercel.app/auth/callback`).
@@ -193,8 +228,12 @@ upgrade do plano Vercel e mude o schedule de volta para `*/15 * * * *`.
 
 ## 🔒 Notas de segurança
 
-- `SUPABASE_SERVICE_ROLE_KEY` e `CRON_SECRET` **nunca** vão para o cliente
-  (sem prefixo `NEXT_PUBLIC_`).
+- `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET` e `MERCADOPAGO_ACCESS_TOKEN` **nunca**
+  vão para o cliente (sem prefixo `NEXT_PUBLIC_`).
+- O webhook do Mercado Pago nunca confia no corpo recebido: reconsulta a API
+  oficial antes de registrar o pagamento (via `service_role`).
+- Na tabela `payments`, a confirmação de pagamento só acontece pela RPC
+  `record_payment` ou pelo webhook — o cliente só pode criar cobranças pendentes.
 - Inserção/atualização direta em `bookings` é bloqueada por RLS — só as RPCs
   escrevem reservas, com validação de disponibilidade no banco.
 - URLs de calendário iCal ficam em `external_calendars` e só são visíveis ao

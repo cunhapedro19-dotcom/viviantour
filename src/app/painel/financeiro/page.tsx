@@ -6,7 +6,14 @@ import { BookingStatusBadge } from "@/components/StatusBadge";
 import { formatBRL, formatDateRange, formatDateTimeShort } from "@/lib/format";
 import { fetchOrgBookings } from "@/lib/panel-ops";
 import { usePanelUser } from "@/lib/use-panel-user";
-import type { Booking } from "@/lib/types";
+import type { Booking, PaymentStatus } from "@/lib/types";
+
+const PAYMENT_LABEL: Record<PaymentStatus, string> = {
+  pending: "pendente",
+  paid: "pago",
+  failed: "recusado",
+  refunded: "reembolsado",
+};
 
 export default function FinanceiroPage() {
   const { user } = usePanelUser();
@@ -83,6 +90,11 @@ export default function FinanceiroPage() {
                     {b.customerName} ·{" "}
                     {b.kind === "stay" ? formatDateRange(b.checkIn, b.checkOut) : formatDateTimeShort(b.startsAt ?? "")}
                   </p>
+                  {b.paymentStatus && (
+                    <p className="mt-0.5 text-xs text-tinta-mute">
+                      Pagamento: {b.paymentMethod ?? "manual"} · {PAYMENT_LABEL[b.paymentStatus]}
+                    </p>
+                  )}
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-tinta">{formatBRL(b.totalCents)}</p>
@@ -97,10 +109,11 @@ export default function FinanceiroPage() {
       </div>
 
       <div className="rounded-2xl bg-oceano-50 p-5 text-sm text-oceano-900">
-        <strong>Sobre pagamentos:</strong> nesta fase, o acerto financeiro é feito diretamente com o
-        cliente. Cobrança online, repasses automáticos (split) e extratos com gateway parceiro
-        entram na Fase 7 do roadmap — a estrutura de dados (pagamentos, comissões e repasses) já
-        está pronta no banco.
+        <strong>Sobre pagamentos:</strong> ao aceitar uma reserva, as datas ficam bloqueadas e o
+        cliente recebe o link de pagamento — Checkout Pro do Mercado Pago (quando configurado) ou
+        confirmação manual. A reserva é confirmada automaticamente quando o pagamento é aprovado, e
+        o valor líquido já desconta a comissão. Repasses automáticos (split) e extratos por período
+        são a próxima etapa.
       </div>
     </div>
   );

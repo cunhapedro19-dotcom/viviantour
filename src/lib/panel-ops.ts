@@ -14,8 +14,11 @@ import {
   addCreatedTour,
   addExternalCalendar as addExternalCalendarToStore,
   addManualBlock,
+  createPayment,
+  getBooking,
   getCreatedStay,
   getCreatedTour,
+  getPaymentByBooking,
   listBookings,
   listCreatedDepartures,
   listCreatedStays,
@@ -37,6 +40,7 @@ import type {
   ListingStatus,
   NewStayInput,
   NewTourInput,
+  PaymentStatus,
   PropertyBlock,
   Stay,
   Tour,
@@ -50,7 +54,23 @@ type Result = { ok: true } | { ok: false; error: string };
 // ---------------------------------------------------------------------------
 export async function respondBooking(id: string, accept: boolean, reason?: string): Promise<Result> {
   if (DEMO_MODE) {
-    updateBookingStatus(id, accept ? "confirmed" : "declined", reason);
+    // espelha a RPC respond_booking (migração 0002): aceitar gera cobrança
+    updateBookingStatus(id, accept ? "awaiting_payment" : "declined", reason);
+    if (accept) {
+      const booking = getBooking(id);
+      if (booking && !getPaymentByBooking(id)) {
+        createPayment({
+          id: `pay-${Date.now()}`,
+          bookingId: id,
+          status: "pending",
+          method: null,
+          provider: "demo",
+          providerRef: null,
+          amountCents: booking.totalCents,
+          createdAt: new Date().toISOString(),
+        });
+      }
+    }
     return { ok: true };
   }
   const sb = getSupabaseBrowserClient();
@@ -92,43 +112,53 @@ function friendly(message: string): string {
 
 export async function fetchOrgBookings(orgId: string): Promise<Booking[]> {
   if (DEMO_MODE) {
-    return listBookings().filter((b) => b.orgId === orgId);
+    return listBookings()
+      .filter((b) => b.orgId === orgId)
+      .map((b) => {
+        const p = getPaymentByBooking(b.id);
+        return { ...b, paymentStatus: p?.status ?? null, paymentMethod: p?.method ?? null };
+      });
   }
   const sb = getSupabaseBrowserClient();
   const { data } = await sb
     .from("bookings")
     .select(
-      "*, customer:profiles!bookings_customer_id_fkey(full_name), property:properties(name,slug), service:services(name,slug)"
+      "*, customer:profiles!bookings_customer_id_fkey(full_name), property:properties(name,slug), service:services(name,slug), payments(status, method)"
     )
     .eq("org_id", orgId)
     .order("created_at", { ascending: false });
 
-  return (data ?? []).map((b: Record<string, unknown>) => ({
-    id: String(b.id),
-    code: String(b.code),
-    kind: b.kind as "stay" | "tour",
-    itemId: String(b.property_id ?? b.service_id ?? ""),
-    itemSlug: String((b.property as { slug?: string } | null)?.slug ?? (b.service as { slug?: string } | null)?.slug ?? ""),
-    itemName: String((b.property as { name?: string } | null)?.name ?? (b.service as { name?: string } | null)?.name ?? "Reserva"),
-    orgId: String(b.org_id),
-    orgName: "",
-    status: b.status as Booking["status"],
-    checkIn: (b.check_in as string) ?? null,
-    checkOut: (b.check_out as string) ?? null,
-    nights: (b.nights as number) ?? null,
-    startsAt: (b.starts_at as string) ?? null,
-    endsAt: (b.ends_at as string) ?? null,
-    adults: Number(b.adults),
-    children: Number(b.children),
-    guestsTotal: Number(b.guests_total),
-    totalCents: Number(b.total_cents),
-    commissionCents: Number(b.commission_cents),
-    netCents: Number(b.net_cents),
-    customerName: String((b.customer as { full_name?: string } | null)?.full_name ?? "Cliente"),
-    customerNote: (b.customer_note as string) ?? null,
-    cancellationReason: (b.cancellation_reason as string) ?? null,
-    createdAt: String(b.created_at),
-  }));
+  return (data ?? []).map((b: Record<string, unknown>) => {
+    const pay = ((b.payments as { status?: string; method?: string }[] | null) ?? [])[0];
+    return {
+      id: String(b.id),
+      code: String(b.code),
+      kind: b.kind as "stay" | "tour",
+      itemId: String(b.property_id ?? b.service_id ?? ""),
+      itemSlug: String((b.property as { slug?: string } | null)?.slug ?? (b.service as { slug?: string } | null)?.slug ?? ""),
+      itemName: String((b.property as { name?: string } | null)?.name ?? (b.service as { name?: string } | null)?.name ?? "Reserva"),
+      orgId: String(b.org_id),
+      orgName: "",
+      status: b.status as Booking["status"],
+      checkIn: (b.check_in as string) ?? null,
+      checkOut: (b.check_out as string) ?? null,
+      nights: (b.nights as number) ?? null,
+      startsAt: (b.starts_at as string) ?? null,
+      endsAt: (b.ends_at as string) ?? null,
+      adults: Number(b.adults),
+      children: Number(b.children),
+      guestsTotal: Number(b.guests_total),
+      totalCents: Number(b.total_cents),
+      commissionCents: Number(b.commission_cents),
+      netCents: Number(b.net_cents),
+      customerName: String((b.customer as { full_name?: string } | null)?.full_name ?? "Cliente"),
+      customerNote: (b.customer_note as string) ?? null,
+      cancellationReason: (b.cancellation_reason as string) ?? null,
+      paymentStatus: (pay?.status as PaymentStatus) ?? null,
+      paymentMethod: pay?.method ?? null,
+      createdAt: String(b.created_at),
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------

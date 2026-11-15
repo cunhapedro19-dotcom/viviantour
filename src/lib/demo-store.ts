@@ -15,6 +15,8 @@ import type {
   DemoUser,
   Departure,
   ExternalCalendarView,
+  PaymentStatus,
+  PaymentView,
   PropertyBlock,
   Review,
   Stay,
@@ -24,6 +26,7 @@ import type {
 const KEYS = {
   user: "vt:user",
   bookings: "vt:bookings",
+  payments: "vt:payments",
   favorites: "vt:favs",
   stays: "vt:stays",
   tours: "vt:tours",
@@ -223,11 +226,21 @@ export function updateBookingStatus(id: string, status: BookingStatus, reason?: 
   const next = all.map((b) => {
     if (b.id !== id) return b;
     const updated = { ...b, status, cancellationReason: reason ?? b.cancellationReason };
-    if (status === "confirmed") {
-      // espelha a regra da RPC respond_booking: comissão padrão de 10%
-      const commission = Math.round(b.totalCents * 0.1);
-      updated.commissionCents = commission;
-      updated.netCents = b.totalCents - commission;
+    if (status === "awaiting_payment" || status === "confirmed") {
+      // espelha a regra da RPC respond_booking: comissão padrão de 10%,
+      // calculada quando o fornecedor aceita (antes do pagamento)
+      if (updated.commissionCents === 0) {
+        const commission = Math.round(b.totalCents * 0.1);
+        updated.commissionCents = commission;
+        updated.netCents = b.totalCents - commission;
+      }
+    }
+    if (status === "cancelled" || status === "declined") {
+      // pagamento pago vira reembolso (espelha cancel_booking na migração 0002)
+      const payment = getPaymentByBooking(id);
+      if (payment && payment.status === "paid") {
+        updatePaymentStatus(id, "refunded", null);
+      }
     }
     return updated;
   });
@@ -236,6 +249,68 @@ export function updateBookingStatus(id: string, status: BookingStatus, reason?: 
 
 export function getBooking(id: string): Booking | undefined {
   return listBookings().find((b) => b.id === id);
+}
+
+// ---------------------------------------------------------------------------
+// Pagamentos (ciclo: pendente → pago/recusado; pago vira reembolso no cancelamento)
+// ---------------------------------------------------------------------------
+function seedPayments(): PaymentView[] {
+  const mk = (
+    id: string,
+    bookingId: string,
+    status: PaymentStatus,
+    method: string,
+    daysAgo: number
+  ): PaymentView => {
+    const booking = listBookings().find((b) => b.id === bookingId);
+    return {
+      id,
+      bookingId,
+      status,
+      method,
+      provider: "demo",
+      providerRef: `demo-${id}`,
+      amountCents: booking?.totalCents ?? 0,
+      createdAt: new Date(Date.now() - daysAgo * 86400000).toISOString(),
+    };
+  };
+  return [
+    mk("pay-1", "bk-2", "paid", "pix", 3),
+    mk("pay-2", "bk-3", "paid", "cartao", 9),
+    mk("pay-3", "bk-4", "paid", "pix", 40),
+    mk("pay-4", "bk-5", "paid", "cartao", 2),
+  ];
+}
+
+export function listPayments(): PaymentView[] {
+  const existing = read<PaymentView[] | null>(KEYS.payments, null);
+  if (existing) return existing;
+  const seeded = seedPayments();
+  write(KEYS.payments, seeded);
+  return seeded;
+}
+
+export function getPaymentByBooking(bookingId: string): PaymentView | undefined {
+  return listPayments().find((p) => p.bookingId === bookingId);
+}
+
+export function createPayment(payment: PaymentView): void {
+  write(KEYS.payments, [payment, ...listPayments()]);
+}
+
+export function updatePaymentStatus(
+  bookingId: string,
+  status: PaymentStatus,
+  method: string | null
+): void {
+  write(
+    KEYS.payments,
+    listPayments().map((p) =>
+      p.bookingId === bookingId
+        ? { ...p, status, method: method ?? p.method, createdAt: p.createdAt }
+        : p
+    )
+  );
 }
 
 // ---------------------------------------------------------------------------

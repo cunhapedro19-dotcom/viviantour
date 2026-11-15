@@ -107,8 +107,19 @@ export function BookingCard({
                 líquido {formatBRL(booking.netCents)}
               </span>
             )}
+            {perspective === "customer" && booking.paymentStatus === "paid" && (
+              <span className="ml-2 text-xs font-semibold text-emerald-600">✓ pago</span>
+            )}
+            {perspective === "customer" && booking.paymentStatus === "refunded" && (
+              <span className="ml-2 text-xs font-semibold text-amber-600">reembolsado</span>
+            )}
           </div>
           <div className="flex gap-2">
+            {perspective === "customer" && booking.status === "awaiting_payment" && (
+              <Link href={`/pagamento/${booking.id}`} className="btn-turquesa btn-sm">
+                Pagar agora
+              </Link>
+            )}
             {perspective === "customer" && cancellable && (
               <button
                 type="button"

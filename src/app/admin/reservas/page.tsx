@@ -33,7 +33,7 @@ export default function AdminReservasPage() {
       </header>
 
       <div className="flex flex-wrap gap-2">
-        {(["todas", "pending", "confirmed", "completed", "declined", "cancelled"] as const).map((f) => (
+        {(["todas", "pending", "awaiting_payment", "confirmed", "completed", "declined", "cancelled"] as const).map((f) => (
           <button
             key={f}
             type="button"

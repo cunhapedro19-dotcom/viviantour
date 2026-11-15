@@ -73,7 +73,7 @@ export default function AdminDashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label="Fornecedores ativos" value={String(kpis.orgsActive)} hint={`${kpis.orgsPending} aguardando aprovação`} />
         <KpiCard label="Anúncios publicados" value={String(kpis.listingsPublished)} hint={`${kpis.listingsPending} em análise`} />
-        <KpiCard label="Reservas na plataforma" value={String(kpis.bookingsCount)} tone="info" />
+        <KpiCard label="Reservas na plataforma" value={String(kpis.bookingsCount)} tone="info" hint={`${kpis.awaitingPayment} aguardando pagamento`} />
         <KpiCard label="GMV confirmado" value={formatBRL(kpis.gmvCents)} tone="success" hint={`comissões ${formatBRL(kpis.commissionCents)}`} />
       </div>
 

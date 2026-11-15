@@ -17,6 +17,8 @@ export type BookingStatus =
   | "cancelled"
   | "completed";
 
+export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
+
 export type TourKind = "boat_tour" | "experience" | "guide";
 
 export interface Organization {
@@ -140,6 +142,20 @@ export interface Booking {
   customerName: string;
   customerNote?: string | null;
   cancellationReason?: string | null;
+  paymentStatus?: PaymentStatus | null;
+  paymentMethod?: string | null;
+  createdAt: string;
+}
+
+/** Pagamento de uma reserva (vista simplificada para a UI). */
+export interface PaymentView {
+  id: string;
+  bookingId: string;
+  status: PaymentStatus;
+  method: string | null; // pix | cartao | manual | payment_method_id do gateway
+  provider: string | null; // mercadopago | demo | null (manual)
+  providerRef: string | null; // id da cobrança no gateway
+  amountCents: number;
   createdAt: string;
 }
 
