@@ -12,7 +12,7 @@ import {
   addCreatedDeparture,
   addCreatedStay,
   addCreatedTour,
-  addExternalCalendarToStore,
+  addExternalCalendar as addExternalCalendarToStore,
   addManualBlock,
   getCreatedStay,
   getCreatedTour,

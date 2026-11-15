@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ListingStatusBadge } from "@/components/StatusBadge";
 import { DEMO_MODE } from "@/lib/config";
 import { fetchAdminListings, setListingStatus } from "@/lib/admin-ops";
-import type { AdminListingRow } from "@/lib/types";
+import type { AdminListingRow } from "@/lib/admin-ops";
 
 export default function AdminAnunciosPage() {
   const [listings, setListings] = useState<AdminListingRow[] | null>(null);

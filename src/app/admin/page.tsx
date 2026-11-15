@@ -7,7 +7,8 @@ import { BookingStatusBadge, OrgStatusBadge } from "@/components/StatusBadge";
 import { DEMO_MODE } from "@/lib/config";
 import { formatBRL, formatDateShort } from "@/lib/format";
 import { fetchAdminBookings, fetchAdminKpis, fetchAdminListings, fetchAdminOrgs, setListingStatus, setOrgStatus } from "@/lib/admin-ops";
-import type { AdminListingRow, AdminOrgRow, Booking } from "@/lib/types";
+import type { AdminListingRow, AdminOrgRow } from "@/lib/admin-ops";
+import type { Booking } from "@/lib/types";
 
 export default function AdminDashboardPage() {
   const [kpis, setKpis] = useState<Awaited<ReturnType<typeof fetchAdminKpis>> | null>(null);

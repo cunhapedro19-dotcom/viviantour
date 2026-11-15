@@ -5,7 +5,7 @@ import { OrgStatusBadge } from "@/components/StatusBadge";
 import { DEMO_MODE } from "@/lib/config";
 import { formatDateShort } from "@/lib/format";
 import { fetchAdminOrgs, setOrgStatus } from "@/lib/admin-ops";
-import type { AdminOrgRow } from "@/lib/types";
+import type { AdminOrgRow } from "@/lib/admin-ops";
 
 export default function AdminFornecedoresPage() {
   const [orgs, setOrgs] = useState<AdminOrgRow[] | null>(null);

@@ -23,7 +23,7 @@ export interface AdminListingRow {
   kind: "stay" | "tour";
   name: string;
   orgName: string;
-  status: string;
+  status: ListingStatus;
   slug: string;
 }
 
@@ -131,7 +131,7 @@ export async function fetchAdminListings(): Promise<AdminListingRow[]> {
         kind: "stay" as const,
         name: s.name,
         orgName: s.orgName,
-        status: s.status as string,
+        status: s.status,
         slug: s.slug,
       })),
       ...[...listCreatedTours(), ...demoTours].map((t: Tour) => ({
@@ -139,7 +139,7 @@ export async function fetchAdminListings(): Promise<AdminListingRow[]> {
         kind: "tour" as const,
         name: t.name,
         orgName: t.orgName,
-        status: t.status as string,
+        status: t.status,
         slug: t.slug,
       })),
     ];
@@ -170,7 +170,7 @@ export async function fetchAdminListings(): Promise<AdminListingRow[]> {
       kind: "stay" as const,
       name: String(s.name),
       orgName: String((s.organization as { name?: string } | null)?.name ?? "—"),
-      status: String(s.status),
+      status: String(s.status) as ListingStatus,
       slug: String(s.slug),
     })),
     ...((toursRes.data ?? []) as Record<string, unknown>[]).map((t) => ({
@@ -178,7 +178,7 @@ export async function fetchAdminListings(): Promise<AdminListingRow[]> {
       kind: "tour" as const,
       name: String(t.name),
       orgName: String((t.organization as { name?: string } | null)?.name ?? "—"),
-      status: String(t.status),
+      status: String(t.status) as ListingStatus,
       slug: String(t.slug),
     })),
   ];
