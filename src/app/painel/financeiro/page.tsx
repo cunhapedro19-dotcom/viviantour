@@ -5,8 +5,9 @@ import { KpiCard } from "@/components/panel/KpiCard";
 import { BookingStatusBadge } from "@/components/StatusBadge";
 import { formatBRL, formatDateRange, formatDateTimeShort } from "@/lib/format";
 import { fetchOrgBookings } from "@/lib/panel-ops";
+import { fetchMonetizationBrowser } from "@/lib/monetization";
 import { usePanelUser } from "@/lib/use-panel-user";
-import type { Booking, PaymentStatus } from "@/lib/types";
+import type { Booking, Monetization, PaymentStatus } from "@/lib/types";
 
 const PAYMENT_LABEL: Record<PaymentStatus, string> = {
   pending: "pendente",
@@ -18,6 +19,7 @@ const PAYMENT_LABEL: Record<PaymentStatus, string> = {
 export default function FinanceiroPage() {
   const { user } = usePanelUser();
   const [bookings, setBookings] = useState<Booking[] | null>(null);
+  const [monetization, setMonetization] = useState<Monetization | null>(null);
 
   useEffect(() => {
     if (!user?.orgId) return;
@@ -29,6 +31,16 @@ export default function FinanceiroPage() {
       active = false;
     };
   }, [user?.orgId]);
+
+  useEffect(() => {
+    let active = true;
+    fetchMonetizationBrowser().then((m) => {
+      if (active) setMonetization(m);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   if (!user || bookings === null) {
     return (
@@ -62,6 +74,21 @@ export default function FinanceiroPage() {
           Valores das reservas confirmadas e concluídas, com comissões discriminadas.
         </p>
       </header>
+
+      {monetization && (
+        <div className="card flex flex-wrap items-center gap-2 px-5 py-3.5 text-sm">
+          <span className="font-semibold text-tinta">Modelo Viviantourr:</span>
+          <span className="text-tinta-soft">
+            {monetization.model === "free" && "Gratuito — sem comissão sobre suas reservas."}
+            {monetization.model === "commission" &&
+              `Comissão de ${monetization.percent}% por reserva confirmada.`}
+            {monetization.model === "subscription" &&
+              `Mensalidade de ${formatBRL(monetization.monthlyFeeCents)} — sem comissão sobre suas reservas.`}
+            {monetization.model === "hybrid" &&
+              `Mensalidade de ${formatBRL(monetization.monthlyFeeCents)} + ${monetization.percent}% por reserva confirmada.`}
+          </span>
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label="Receita bruta" value={formatBRL(gross)} />

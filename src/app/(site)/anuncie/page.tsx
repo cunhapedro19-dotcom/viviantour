@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Artwork } from "@/components/Artwork";
+import {
+  MONETIZATION_DESCRIPTION,
+  MONETIZATION_LABEL,
+  modelAppliesCommission,
+  modelAppliesMonthlyFee,
+} from "@/lib/monetization";
+import { fetchMonetizationServer } from "@/lib/monetization-server";
+import { formatBRL } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Seja um parceiro Viviantourr",
@@ -8,7 +16,9 @@ export const metadata: Metadata = {
     "Anuncie sua hospedagem, embarcação ou experiência turística em Arraial do Cabo com painel próprio, calendário e gestão de reservas.",
 };
 
-export default function AnunciePage() {
+export default async function AnunciePage() {
+  const monetization = await fetchMonetizationServer();
+
   return (
     <div>
       <section className="relative overflow-hidden">
@@ -87,12 +97,37 @@ export default function AnunciePage() {
         </div>
 
         <div className="mt-12 rounded-3xl bg-areia-100 p-8">
-          <h2 className="section-title text-xl">Comissão transparente</h2>
+          <h2 className="section-title text-xl">{MONETIZATION_LABEL[monetization.model]}</h2>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-tinta-soft">
-            A Viviantourr cobra uma comissão padrão de <strong>10%</strong> sobre cada reserva
-            confirmada — sem mensalidade, sem taxa de publicação. A regra pode variar por categoria
-            ou por acordo comercial com fornecedores, e sempre aparece discriminada no seu painel
-            financeiro: valor bruto, comissão e valor líquido.
+            {MONETIZATION_DESCRIPTION[monetization.model]}
+          </p>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-tinta-soft">
+            {modelAppliesCommission(monetization.model) && (
+              <>
+                Comissão vigente: <strong>{monetization.percent}%</strong> sobre cada reserva
+                confirmada
+                {modelAppliesMonthlyFee(monetization.model) && <> · </>}
+              </>
+            )}
+            {modelAppliesMonthlyFee(monetization.model) && (
+              <>
+                Mensalidade:{" "}
+                <strong>
+                  {formatBRL(monetization.monthlyFeeCents)}
+                </strong>{" "}
+                por mês
+              </>
+            )}
+            {monetization.model === "free" && (
+              <>Sem comissão, sem mensalidade, sem taxa de publicação.</>
+            )}
+            {monetization.model !== "free" && (
+              <>
+                {" "}
+                A regra pode variar por acordo comercial com fornecedores, e sempre aparece
+                discriminada no seu painel financeiro: valor bruto, comissão e valor líquido.
+              </>
+            )}
           </p>
           <p className="mt-3 max-w-3xl text-xs text-tinta-mute">
             Pagamentos online e repasses automáticos serão habilitados em uma fase seguinte, com

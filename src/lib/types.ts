@@ -2,6 +2,15 @@
 
 export type Role = "admin" | "owner" | "provider" | "customer";
 
+// Modelo de monetização definido pela equipe em /admin/configuracoes.
+export type MonetizationModel = "free" | "commission" | "subscription" | "hybrid";
+
+export interface Monetization {
+  model: MonetizationModel;
+  percent: number; // comissão por reserva (%), usada em commission e hybrid
+  monthlyFeeCents: number; // mensalidade, usada em subscription e hybrid
+}
+
 export type ListingStatus =
   | "draft"
   | "pending_review"

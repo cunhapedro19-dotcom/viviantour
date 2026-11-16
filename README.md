@@ -60,7 +60,10 @@ No menu lateral: **SQL Editor → New query**.
 3. Novo query: cole `supabase/migrations/0003_onboarding.sql` e execute.
    Correções de RLS para o primeiro uso: o criador passa a enxergar a própria
    organização (onboarding não falha) e avaliações passam a guardar o nome do autor.
-4. Novo query: cole `supabase/seed.sql` e execute.
+4. Novo query: cole `supabase/migrations/0004_monetization.sql` e execute.
+   Cria o modelo de monetização configurável pela equipe em /admin/configuracoes
+   (gratuito, comissão por reserva, mensalidade ou híbrido).
+5. Novo query: cole `supabase/seed.sql` e execute.
    Cria categorias, comodidades e a regra de comissão padrão (10%).
 
 ### 3. Configure as variáveis de ambiente
@@ -196,6 +199,7 @@ supabase/
   migrations/0001_init.sql      → schema completo + RLS + funções
   migrations/0002_payments.sql  → fluxo de pagamento (aguardando pagamento + record_payment)
   migrations/0003_onboarding.sql→ correções de RLS (onboarding + autor de avaliações)
+  migrations/0004_monetization.sql → modelo de monetização (gratuito/comissão/mensalidade/híbrido)
   seed.sql                      → dados de referência + promoção de admin
 scripts/generate-artwork.py → regenera as imagens ilustradas de demonstração
 public/img/                 → arte gerada (42 imagens)

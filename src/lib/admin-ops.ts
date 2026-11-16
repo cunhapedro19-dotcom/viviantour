@@ -6,7 +6,7 @@ import { DEMO_MODE } from "./config";
 import { demoOrganizations, demoStays, demoTours } from "./demo-data";
 import { listBookings, listCreatedStays, listCreatedTours } from "./demo-store";
 import { getSupabaseBrowserClient } from "./supabase/client";
-import type { Booking, ListingStatus, Organization, Stay, Tour } from "./types";
+import type { Booking, ListingStatus, Monetization, Organization, Stay, Tour } from "./types";
 
 export interface AdminOrgRow {
   id: string;
@@ -133,6 +133,21 @@ export async function setOrgStatus(id: string, status: Organization["status"]): 
   const sb = getSupabaseBrowserClient();
   const { error } = await sb.from("organizations").update({ status }).eq("id", id);
   return !error;
+}
+
+/** Grava o modelo de monetização definido pela equipe (só admin, via RLS). */
+export async function saveMonetization(m: Monetization): Promise<string | null> {
+  if (DEMO_MODE) return null; // nada a gravar em demonstração
+  const sb = getSupabaseBrowserClient();
+  const { error } = await sb.from("platform_settings").upsert({
+    key: "monetization",
+    value: {
+      model: m.model,
+      percent: m.percent,
+      monthly_fee_cents: m.monthlyFeeCents,
+    },
+  });
+  return error ? error.message : null;
 }
 
 export async function fetchAdminListings(): Promise<AdminListingRow[]> {
