@@ -3,6 +3,7 @@ import { Artwork } from "@/components/Artwork";
 import { ListingCard } from "@/components/ListingCard";
 import { SearchBar } from "@/components/site/SearchBar";
 import { StarRating } from "@/components/StarRating";
+import { DEMO_MODE } from "@/lib/config";
 import { stayToCard, tourToCard } from "@/lib/card";
 import { getHomeData } from "@/lib/queries";
 
@@ -58,19 +59,21 @@ export default async function HomePage() {
       </section>
 
       {/* CATEGORIAS */}
-      <section className="container-x py-12">
-        <h2 className="section-title mb-6">Explore por categoria</h2>
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-          {stayCategories.map((c) => (
-            <CategoryTile key={c.id} slug={c.slug} label={c.label} icon={c.icon} kind="stay" />
-          ))}
-        </div>
-        <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
-          {tourCategories.map((c) => (
-            <CategoryTile key={c.id} slug={c.slug} label={c.label} icon={c.icon} kind="tour" />
-          ))}
-        </div>
-      </section>
+      {categories.length > 0 && (
+        <section className="container-x py-12">
+          <h2 className="section-title mb-6">Explore por categoria</h2>
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+            {stayCategories.map((c) => (
+              <CategoryTile key={c.id} slug={c.slug} label={c.label} icon={c.icon} kind="stay" />
+            ))}
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
+            {tourCategories.map((c) => (
+              <CategoryTile key={c.id} slug={c.slug} label={c.label} icon={c.icon} kind="tour" />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* HOSPEDAGENS EM DESTAQUE */}
       <section className="container-x py-6">
@@ -79,18 +82,29 @@ export default async function HomePage() {
             <p className="kicker">Fique bem alojado</p>
             <h2 className="section-title">Hospedagens em destaque</h2>
           </div>
-          <Link href="/buscar?tipo=stay" className="btn-outline btn-sm hidden sm:inline-flex">
-            Ver todas
-          </Link>
+          {stayCards.length > 0 && (
+            <Link href="/buscar?tipo=stay" className="btn-outline btn-sm hidden sm:inline-flex">
+              Ver todas
+            </Link>
+          )}
         </div>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {stayCards.map((card) => (
-            <ListingCard key={card.id} data={card} />
-          ))}
-        </div>
-        <Link href="/buscar?tipo=stay" className="btn-outline btn-sm mt-5 inline-flex sm:hidden">
-          Ver todas as hospedagens
-        </Link>
+        {stayCards.length === 0 ? (
+          <EmptyListings
+            title="Primeiras hospedagens chegando"
+            text="Estamos de portas abertas para proprietários de Arraial do Cabo. Em breve você encontra casas, pousadas e flats aqui."
+          />
+        ) : (
+          <>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {stayCards.map((card) => (
+                <ListingCard key={card.id} data={card} />
+              ))}
+            </div>
+            <Link href="/buscar?tipo=stay" className="btn-outline btn-sm mt-5 inline-flex sm:hidden">
+              Ver todas as hospedagens
+            </Link>
+          </>
+        )}
       </section>
 
       {/* PASSEIOS DE BARCO */}
@@ -101,18 +115,29 @@ export default async function HomePage() {
               <p className="kicker">Navegue conosco</p>
               <h2 className="section-title">Passeios de barco</h2>
             </div>
-            <Link href="/buscar?tipo=tour" className="btn-outline btn-sm hidden sm:inline-flex">
-              Ver todos
-            </Link>
+            {tourCards.length > 0 && (
+              <Link href="/buscar?tipo=tour" className="btn-outline btn-sm hidden sm:inline-flex">
+                Ver todos
+              </Link>
+            )}
           </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {tourCards.map((card) => (
-              <ListingCard key={card.id} data={card} />
-            ))}
-          </div>
-          <Link href="/buscar?tipo=tour" className="btn-outline btn-sm mt-5 inline-flex sm:hidden">
-            Ver todos os passeios
-          </Link>
+          {tourCards.length === 0 ? (
+            <EmptyListings
+              title="Primeiros passeios chegando"
+              text="Escunas, speedboats, mergulho e experiências com operadores locais — em breve no ar."
+            />
+          ) : (
+            <>
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {tourCards.map((card) => (
+                  <ListingCard key={card.id} data={card} />
+                ))}
+              </div>
+              <Link href="/buscar?tipo=tour" className="btn-outline btn-sm mt-5 inline-flex sm:hidden">
+                Ver todos os passeios
+              </Link>
+            </>
+          )}
         </div>
       </section>
 
@@ -168,39 +193,41 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* DEPOIMENTOS */}
-      <section className="container-x py-14">
-        <p className="kicker">Quem viveu, recomenda</p>
-        <h2 className="section-title mb-8">Avaliações reais de viajantes</h2>
-        <div className="grid gap-5 md:grid-cols-3">
-          {[
-            {
-              name: "Marina S.",
-              context: "Hóspede · Casa Vista Atalaia",
-              text: "Casa impecável e as fotos nem fazem justiça à vista. A piscina ao pôr do sol é um espetáculo. Voltaremos com certeza!",
-            },
-            {
-              name: "Natália E.",
-              context: "Mergulhadora · Gruta Azul",
-              text: "Nunca havia mergulhado e me senti 100% segura. O fundo da Gruta Azul é de outro planeta.",
-            },
-            {
-              name: "Helena P.",
-              context: "Hóspede · Pousada Recanto do Atalaia",
-              text: "O café da manhã vale o preço da estadia! Todo mundo tratando a gente como família.",
-            },
-          ].map((t) => (
-            <figure key={t.name} className="card flex h-full flex-col gap-3 p-6">
-              <StarRating rating={5} />
-              <blockquote className="flex-1 text-sm leading-relaxed text-tinta-soft">“{t.text}”</blockquote>
-              <figcaption>
-                <p className="text-sm font-semibold text-tinta">{t.name}</p>
-                <p className="text-xs text-tinta-mute">{t.context}</p>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-      </section>
+      {/* DEPOIMENTOS — apenas na demonstração; na plataforma real só aparecem avaliações verdadeiras */}
+      {DEMO_MODE && (
+        <section className="container-x py-14">
+          <p className="kicker">Quem viveu, recomenda</p>
+          <h2 className="section-title mb-8">Avaliações reais de viajantes</h2>
+          <div className="grid gap-5 md:grid-cols-3">
+            {[
+              {
+                name: "Marina S.",
+                context: "Hóspede · Casa Vista Atalaia",
+                text: "Casa impecável e as fotos nem fazem justiça à vista. A piscina ao pôr do sol é um espetáculo. Voltaremos com certeza!",
+              },
+              {
+                name: "Natália E.",
+                context: "Mergulhadora · Gruta Azul",
+                text: "Nunca havia mergulhado e me senti 100% segura. O fundo da Gruta Azul é de outro planeta.",
+              },
+              {
+                name: "Helena P.",
+                context: "Hóspede · Pousada Recanto do Atalaia",
+                text: "O café da manhã vale o preço da estadia! Todo mundo tratando a gente como família.",
+              },
+            ].map((t) => (
+              <figure key={t.name} className="card flex h-full flex-col gap-3 p-6">
+                <StarRating rating={5} />
+                <blockquote className="flex-1 text-sm leading-relaxed text-tinta-soft">“{t.text}”</blockquote>
+                <figcaption>
+                  <p className="text-sm font-semibold text-tinta">{t.name}</p>
+                  <p className="text-xs text-tinta-mute">{t.context}</p>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* CTA PARCEIROS */}
       <section className="container-x pb-4">
@@ -225,6 +252,19 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+function EmptyListings({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="card flex flex-col items-center gap-3 px-6 py-10 text-center">
+      <span className="grid h-12 w-12 place-items-center rounded-full bg-oceano-50 text-2xl">🌊</span>
+      <h3 className="font-display text-lg font-semibold text-tinta">{title}</h3>
+      <p className="max-w-md text-sm leading-relaxed text-tinta-mute">{text}</p>
+      <Link href="/anuncie" className="btn-outline btn-sm mt-1">
+        Quero anunciar
+      </Link>
     </div>
   );
 }

@@ -16,12 +16,24 @@ const sans = Manrope({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE.url),
   title: {
     default: `${SITE.name} — ${SITE.tagline}`,
     template: `%s · ${SITE.name}`,
   },
   description:
     "O marketplace de turismo de Arraial do Cabo: hospedagens, passeios de barco, mergulho e experiências inesquecíveis, de fornecedores locais verificados.",
+  openGraph: {
+    title: `${SITE.name} — ${SITE.tagline}`,
+    description:
+      "Hospedagens, passeios de barco, mergulho e experiências em Arraial do Cabo, de fornecedores locais verificados.",
+    images: ["/img/og.png"],
+    locale: "pt_BR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({

@@ -57,7 +57,10 @@ No menu lateral: **SQL Editor → New query**.
 2. Novo query: cole `supabase/migrations/0002_payments.sql` e execute.
    Ativa o fluxo de pagamento: `respond_booking` passa a colocar a reserva em
    *aguardando pagamento* e a RPC `record_payment` confirma quando o cliente paga.
-3. Novo query: cole `supabase/seed.sql` e execute.
+3. Novo query: cole `supabase/migrations/0003_onboarding.sql` e execute.
+   Correções de RLS para o primeiro uso: o criador passa a enxergar a própria
+   organização (onboarding não falha) e avaliações passam a guardar o nome do autor.
+4. Novo query: cole `supabase/seed.sql` e execute.
    Cria categorias, comodidades e a regra de comissão padrão (10%).
 
 ### 3. Configure as variáveis de ambiente
@@ -192,6 +195,7 @@ src/
 supabase/
   migrations/0001_init.sql      → schema completo + RLS + funções
   migrations/0002_payments.sql  → fluxo de pagamento (aguardando pagamento + record_payment)
+  migrations/0003_onboarding.sql→ correções de RLS (onboarding + autor de avaliações)
   seed.sql                      → dados de referência + promoção de admin
 scripts/generate-artwork.py → regenera as imagens ilustradas de demonstração
 public/img/                 → arte gerada (42 imagens)

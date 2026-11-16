@@ -236,14 +236,14 @@ async function supabaseReviews(kind: "stay" | "tour", id: string): Promise<Revie
   const col = kind === "stay" ? "property_id" : "service_id";
   const { data } = await supabase
     .from("reviews")
-    .select("id, rating, title, comment, reply, created_at, author:profiles(full_name)")
+    .select("id, rating, title, comment, reply, created_at, author_name")
     .eq(col, id)
     .eq("status", "published")
     .order("created_at", { ascending: false })
     .limit(20);
   return (data ?? []).map((r: Row) => ({
     id: r.id,
-    authorName: r.author?.full_name ?? "Hóspede",
+    authorName: (r.author_name ?? "").trim() || "Hóspede",
     rating: Number(r.rating),
     title: r.title,
     comment: r.comment ?? "",
