@@ -5,8 +5,20 @@
 import { DEMO_MODE } from "./config";
 import { demoOrganizations, demoStays, demoTours } from "./demo-data";
 import { listBookings, listCreatedStays, listCreatedTours } from "./demo-store";
+import { slugify } from "./format";
+import { createDeparture, createStay, createTour, setDepartureStatus } from "./panel-ops";
 import { getSupabaseBrowserClient } from "./supabase/client";
-import type { Booking, ListingStatus, Monetization, Organization, Stay, Tour } from "./types";
+import type {
+  Booking,
+  DemoUser,
+  ListingStatus,
+  Monetization,
+  NewStayInput,
+  NewTourInput,
+  Organization,
+  Stay,
+  Tour,
+} from "./types";
 
 export interface AdminOrgRow {
   id: string;
@@ -263,4 +275,378 @@ export async function fetchAdminBookings(): Promise<Booking[]> {
     cancellationReason: (b.cancellation_reason as string) ?? null,
     createdAt: String(b.created_at),
   }));
+}
+
+// ============================================================================
+// CADASTROS PELO PAINEL (fornecedor, anúncio, reserva)
+// Só funcionam no modo real: dependem das permissões de administrador criadas
+// na migração supabase/migrations/0005_admin_panel.sql.
+// ============================================================================
+
+export const DEMO_UNAVAILABLE =
+  "Este cadastro grava no banco e só funciona no modo real (com o Supabase configurado).";
+
+const SESSION_EXPIRED = "Sua sessão expirou. Entre novamente para continuar.";
+
+export type OpResult<T extends object = object> = ({ ok: true } & T) | { ok: false; error: string };
+
+async function currentUser() {
+  const sb = getSupabaseBrowserClient();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  return user;
+}
+
+// ---------------------------------------------------------------------------
+// FORNECEDORES
+// ---------------------------------------------------------------------------
+export interface NewSupplierInput {
+  name: string;
+  kind: "host" | "operator";
+  bio: string;
+  phone: string;
+  email: string;
+  /** E-mail de uma conta já cadastrada que passa a administrar o fornecedor (opcional). */
+  linkEmail: string;
+}
+
+export async function createSupplier(
+  input: NewSupplierInput
+): Promise<OpResult<{ orgId: string; linkWarning?: string }>> {
+  if (DEMO_MODE) return { ok: false, error: DEMO_UNAVAILABLE };
+
+  const admin = await currentUser();
+  if (!admin) return { ok: false, error: SESSION_EXPIRED };
+
+  const sb = getSupabaseBrowserClient();
+  const slug = `${slugify(input.name) || "fornecedor"}-${Math.random().toString(36).slice(2, 6)}`;
+  const { data: org, error } = await sb
+    .from("organizations")
+    .insert({
+      name: input.name,
+      slug,
+      kind: input.kind,
+      status: "active",
+      bio: input.bio || null,
+      phone: input.phone || null,
+      email: input.email || null,
+      created_by: admin.id,
+    })
+    .select("id")
+    .single();
+
+  if (error || !org) {
+    return { ok: false, error: "Não foi possível criar o fornecedor. Verifique os dados e tente de novo." };
+  }
+
+  const orgId = String(org.id);
+  const linkEmail = input.linkEmail.trim().toLowerCase();
+  if (!linkEmail) return { ok: true, orgId };
+
+  const { data: profile } = await sb.from("profiles").select("id, role").eq("email", linkEmail).maybeSingle();
+  if (!profile) {
+    return {
+      ok: true,
+      orgId,
+      linkWarning: `Fornecedor criado, mas não existe conta com o e-mail ${linkEmail}. Peça para a pessoa se cadastrar no site e vincule depois.`,
+    };
+  }
+
+  const { error: memberError } = await sb.from("organization_members").insert({
+    organization_id: orgId,
+    profile_id: profile.id,
+    member_role: "owner",
+  });
+  if (memberError) {
+    return { ok: true, orgId, linkWarning: "Fornecedor criado, mas não foi possível vincular a conta informada." };
+  }
+
+  // Quem administra um fornecedor precisa de um papel que dê acesso ao /painel.
+  if (profile.role === "customer") {
+    await sb
+      .from("profiles")
+      .update({ role: input.kind === "host" ? "owner" : "provider" })
+      .eq("id", profile.id);
+  }
+
+  return { ok: true, orgId };
+}
+
+// ---------------------------------------------------------------------------
+// ANÚNCIOS (em nome de um fornecedor)
+// ---------------------------------------------------------------------------
+async function adminAsPanelUser(org: { id: string; name: string }): Promise<DemoUser | null> {
+  const user = await currentUser();
+  if (!user) return null;
+  return {
+    id: user.id,
+    name: "Administração",
+    email: user.email ?? "",
+    role: "admin",
+    orgId: org.id,
+    orgName: org.name,
+  };
+}
+
+export async function createStayAsAdmin(
+  org: { id: string; name: string },
+  input: NewStayInput,
+  publishNow: boolean
+): Promise<OpResult<{ id: string }>> {
+  if (DEMO_MODE) return { ok: false, error: DEMO_UNAVAILABLE };
+  const user = await adminAsPanelUser(org);
+  if (!user) return { ok: false, error: SESSION_EXPIRED };
+
+  const created = await createStay(user, input);
+  if (!created.ok) return created;
+
+  if (publishNow) {
+    const published = await setListingStatus("stay", created.id, "published");
+    if (!published) {
+      return {
+        ok: false,
+        error: "O anúncio foi criado como rascunho, mas não foi possível publicar. Publique em Admin → Anúncios.",
+      };
+    }
+  }
+  return { ok: true, id: created.id };
+}
+
+export async function createTourAsAdmin(
+  org: { id: string; name: string },
+  input: NewTourInput,
+  publishNow: boolean
+): Promise<OpResult<{ id: string }>> {
+  if (DEMO_MODE) return { ok: false, error: DEMO_UNAVAILABLE };
+  const user = await adminAsPanelUser(org);
+  if (!user) return { ok: false, error: SESSION_EXPIRED };
+
+  const created = await createTour(user, input);
+  if (!created.ok) return created;
+
+  if (publishNow) {
+    const published = await setListingStatus("tour", created.id, "published");
+    if (!published) {
+      return {
+        ok: false,
+        error: "O passeio foi criado como rascunho, mas não foi possível publicar. Publique em Admin → Anúncios.",
+      };
+    }
+  }
+  return { ok: true, id: created.id };
+}
+
+// ---------------------------------------------------------------------------
+// RESERVAS (criadas pelo painel, em nome de um cliente)
+// ---------------------------------------------------------------------------
+export interface AdminProfileRow {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+export async function fetchAdminProfiles(): Promise<AdminProfileRow[]> {
+  if (DEMO_MODE) return [];
+  const sb = getSupabaseBrowserClient();
+  const { data } = await sb
+    .from("profiles")
+    .select("id, full_name, email, role")
+    .order("full_name", { ascending: true })
+    .limit(500);
+  return ((data ?? []) as Record<string, unknown>[]).map((p) => ({
+    id: String(p.id),
+    name: String(p.full_name || p.email || "Sem nome"),
+    email: String(p.email ?? ""),
+    role: String(p.role ?? ""),
+  }));
+}
+
+export interface BookableStay {
+  id: string;
+  name: string;
+  orgName: string;
+  status: ListingStatus;
+  capacity: number;
+  minNights: number;
+  basePriceCents: number;
+  cleaningFeeCents: number;
+}
+
+export interface BookableDeparture {
+  id: string;
+  startsAt: string;
+  seatsLeft: number;
+  pricePerPersonCents: number;
+  serviceName: string;
+  orgName: string;
+}
+
+export async function fetchBookableItems(): Promise<{ stays: BookableStay[]; departures: BookableDeparture[] }> {
+  if (DEMO_MODE) return { stays: [], departures: [] };
+  const sb = getSupabaseBrowserClient();
+  const [staysRes, depRes] = await Promise.all([
+    sb
+      .from("properties")
+      .select("id, name, status, capacity, min_nights, base_price_cents, cleaning_fee_cents, organization:organizations(name)")
+      .order("name", { ascending: true })
+      .limit(300),
+    sb
+      .from("departures")
+      .select(
+        "id, starts_at, capacity, seats_booked, price_override_cents, service:services(name, price_per_person_cents, organization:organizations(name))"
+      )
+      .eq("status", "open")
+      .gte("starts_at", new Date().toISOString())
+      .order("starts_at", { ascending: true })
+      .limit(300),
+  ]);
+
+  const stays = ((staysRes.data ?? []) as Record<string, unknown>[]).map((s) => ({
+    id: String(s.id),
+    name: String(s.name),
+    orgName: String((s.organization as { name?: string } | null)?.name ?? "—"),
+    status: String(s.status) as ListingStatus,
+    capacity: Number(s.capacity),
+    minNights: Number(s.min_nights),
+    basePriceCents: Number(s.base_price_cents),
+    cleaningFeeCents: Number(s.cleaning_fee_cents),
+  }));
+
+  const departures = ((depRes.data ?? []) as Record<string, unknown>[]).map((d) => {
+    const service = d.service as {
+      name?: string;
+      price_per_person_cents?: number;
+      organization?: { name?: string } | null;
+    } | null;
+    return {
+      id: String(d.id),
+      startsAt: String(d.starts_at),
+      seatsLeft: Number(d.capacity) - Number(d.seats_booked),
+      pricePerPersonCents: Number(d.price_override_cents ?? service?.price_per_person_cents ?? 0),
+      serviceName: String(service?.name ?? "Passeio"),
+      orgName: String(service?.organization?.name ?? "—"),
+    };
+  });
+
+  return { stays, departures };
+}
+
+export interface AdminBookingInput {
+  kind: "stay" | "tour";
+  propertyId?: string;
+  departureId?: string;
+  adults: number;
+  children: number;
+  checkIn?: string;
+  checkOut?: string;
+  /** Vazio = reserva no nome do próprio administrador. */
+  customerId?: string;
+  note?: string;
+  phone?: string;
+  /** Confirma na hora (bloqueia datas/vagas e calcula a comissão). */
+  autoConfirm: boolean;
+}
+
+function bookingError(message: string): string {
+  const map: [string, string][] = [
+    ["CUSTOMER_NOT_FOUND", "O cliente escolhido não tem perfil na plataforma."],
+    ["PROPERTY_NOT_FOUND", "Hospedagem não encontrada."],
+    ["MIN_NIGHTS", "O período é menor que o mínimo de noites desta hospedagem."],
+    ["CAPACITY_EXCEEDED", "O número de hóspedes passa da capacidade da hospedagem."],
+    ["INVALID_DATES", "A saída precisa ser depois da entrada."],
+    ["INVALID_GUESTS", "Informe ao menos 1 hóspede."],
+    ["MISSING_FIELDS", "Preencha todos os campos obrigatórios da reserva."],
+    ["NOT_AVAILABLE", "Essas datas não estão livres (reserva, bloqueio ou calendário externo)."],
+    ["DEPARTURE_NOT_FOUND", "Saída não encontrada."],
+    ["DEPARTURE_UNAVAILABLE", "A saída não está mais aberta."],
+    ["DEPARTURE_PAST", "Essa saída já passou."],
+    ["SERVICE_NOT_FOUND", "Passeio não encontrado."],
+    ["NO_SEATS", "Não há vagas suficientes nesta saída."],
+    ["FORBIDDEN", "Apenas administradores podem criar reservas pelo painel."],
+  ];
+  const hit = map.find(([code]) => message.includes(code));
+  return hit ? hit[1] : "Não foi possível criar a reserva. Tente novamente.";
+}
+
+export async function adminCreateBooking(input: AdminBookingInput): Promise<OpResult<{ id: string }>> {
+  if (DEMO_MODE) return { ok: false, error: DEMO_UNAVAILABLE };
+  const sb = getSupabaseBrowserClient();
+  const isStay = input.kind === "stay";
+  const { data, error } = await sb.rpc("admin_create_booking", {
+    p_kind: input.kind,
+    p_property_id: isStay ? input.propertyId || null : null,
+    p_departure_id: isStay ? null : input.departureId || null,
+    p_adults: input.adults,
+    p_children: input.children,
+    p_check_in: isStay ? input.checkIn || null : null,
+    p_check_out: isStay ? input.checkOut || null : null,
+    p_customer_id: input.customerId || null,
+    p_customer_note: input.note || null,
+    p_contact_phone: input.phone || null,
+    p_auto_confirm: input.autoConfirm,
+  });
+  if (error) return { ok: false, error: bookingError(error.message) };
+  return { ok: true, id: String(data) };
+}
+
+// ---------------------------------------------------------------------------
+// SAÍDAS DE PASSEIOS (necessárias para existir reserva de passeio)
+// ---------------------------------------------------------------------------
+export interface AdminDepartureRow {
+  id: string;
+  startsAt: string;
+  capacity: number;
+  seatsBooked: number;
+  status: "open" | "blocked" | "cancelled";
+  priceOverrideCents: number | null;
+}
+
+export async function fetchAdminTours(): Promise<{ id: string; name: string; orgName: string }[]> {
+  if (DEMO_MODE) return [];
+  const sb = getSupabaseBrowserClient();
+  const { data } = await sb
+    .from("services")
+    .select("id, name, organization:organizations(name)")
+    .order("name", { ascending: true })
+    .limit(300);
+  return ((data ?? []) as Record<string, unknown>[]).map((t) => ({
+    id: String(t.id),
+    name: String(t.name),
+    orgName: String((t.organization as { name?: string } | null)?.name ?? "—"),
+  }));
+}
+
+export async function fetchTourDepartures(serviceId: string): Promise<AdminDepartureRow[]> {
+  if (DEMO_MODE) return [];
+  const sb = getSupabaseBrowserClient();
+  const { data } = await sb
+    .from("departures")
+    .select("id, starts_at, capacity, seats_booked, status, price_override_cents")
+    .eq("service_id", serviceId)
+    .gte("starts_at", new Date().toISOString())
+    .order("starts_at", { ascending: true })
+    .limit(120);
+  return ((data ?? []) as Record<string, unknown>[]).map((d) => ({
+    id: String(d.id),
+    startsAt: String(d.starts_at),
+    capacity: Number(d.capacity),
+    seatsBooked: Number(d.seats_booked),
+    status: d.status as AdminDepartureRow["status"],
+    priceOverrideCents: (d.price_override_cents as number) ?? null,
+  }));
+}
+
+export async function createTourDeparture(
+  serviceId: string,
+  input: { startsAt: string; capacity: number; priceOverrideCents?: number | null }
+): Promise<OpResult> {
+  if (DEMO_MODE) return { ok: false, error: DEMO_UNAVAILABLE };
+  return createDeparture(serviceId, input);
+}
+
+export async function setTourDepartureStatus(id: string, status: AdminDepartureRow["status"]): Promise<OpResult> {
+  if (DEMO_MODE) return { ok: false, error: DEMO_UNAVAILABLE };
+  return setDepartureStatus(id, status);
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ListingStatusBadge } from "@/components/StatusBadge";
 import { DEMO_MODE } from "@/lib/config";
@@ -32,11 +33,21 @@ export default function AdminAnunciosPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-2xl font-semibold text-tinta">Anúncios</h1>
-        <p className="mt-1 text-sm text-tinta-mute">
-          Moderação de hospedagens e passeios: aprovação, pausa e recusa.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-semibold text-tinta">Anúncios</h1>
+          <p className="mt-1 text-sm text-tinta-mute">
+            Moderação de hospedagens e passeios: aprovação, pausa e recusa.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/anuncios/saidas" className="btn-outline btn-sm">
+            Saídas dos passeios
+          </Link>
+          <Link href="/admin/anuncios/novo" className="btn-turquesa btn-sm">
+            Novo anúncio
+          </Link>
+        </div>
       </header>
 
       {listings === null ? (

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { OrgStatusBadge } from "@/components/StatusBadge";
 import { DEMO_MODE } from "@/lib/config";
@@ -33,11 +34,18 @@ export default function AdminFornecedoresPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-2xl font-semibold text-tinta">Fornecedores</h1>
-        <p className="mt-1 text-sm text-tinta-mute">
-          Aprove, suspenda e acompanhe os perfis comerciais da plataforma.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-semibold text-tinta">Fornecedores</h1>
+          <p className="mt-1 text-sm text-tinta-mute">
+            Aprove, suspenda e acompanhe os perfis comerciais da plataforma.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/fornecedores/novo" className="btn-turquesa btn-sm">
+            Novo fornecedor
+          </Link>
+        </div>
       </header>
 
       {orgs === null ? (

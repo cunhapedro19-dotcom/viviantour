@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BookingStatusBadge } from "@/components/StatusBadge";
 import { DEMO_MODE } from "@/lib/config";
@@ -25,11 +26,18 @@ export default function AdminReservasPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-2xl font-semibold text-tinta">Reservas</h1>
-        <p className="mt-1 text-sm text-tinta-mute">
-          Todas as reservas da plataforma, com comissões calculadas na confirmação.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-semibold text-tinta">Reservas</h1>
+          <p className="mt-1 text-sm text-tinta-mute">
+            Todas as reservas da plataforma, com comissões calculadas na confirmação.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/reservas/nova" className="btn-turquesa btn-sm">
+            Nova reserva
+          </Link>
+        </div>
       </header>
 
       <div className="flex flex-wrap gap-2">
