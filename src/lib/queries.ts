@@ -24,7 +24,7 @@ export interface SearchFilters {
   ordem?: "relevancia" | "preco_asc" | "preco_desc" | "avaliacao";
 }
 
-interface PhotoRow { url: string; sort?: number }
+interface PhotoRow { url: string; sort?: number; type?: string }
 
 function textMatches(item: Stay | Tour, q?: string): boolean {
   if (!q) return true;
@@ -104,7 +104,9 @@ function demoReviewsFor(id: string): Review[] {
 type Row = any;
 
 function mapStayRow(row: Row): Stay {
-  const photos: PhotoRow[] = (row.photos ?? []).slice().sort((a: PhotoRow, b: PhotoRow) => (a.sort ?? 0) - (b.sort ?? 0));
+  const sorted: PhotoRow[] = (row.photos ?? []).slice().sort((a: PhotoRow, b: PhotoRow) => (a.sort ?? 0) - (b.sort ?? 0));
+  const photos = sorted.filter((p) => p.type !== "video");
+  const videos = sorted.filter((p) => p.type === "video").map((p) => p.url);
   const amenityLabels: string[] = (row.amenities ?? [])
     .map((pa: Row) => pa?.amenity?.label)
     .filter(Boolean);
@@ -135,11 +137,15 @@ function mapStayRow(row: Row): Stay {
     images: photos.length
       ? photos.map((p) => p.url)
       : [`${row.slug}-1`, `${row.slug}-2`, `${row.slug}-3`],
+    videos,
     amenityLabels,
   };
 }
 
 function mapTourRow(row: Row): Tour {
+  const sorted: PhotoRow[] = (row.media ?? []).slice().sort((a: PhotoRow, b: PhotoRow) => (a.sort ?? 0) - (b.sort ?? 0));
+  const photos = sorted.filter((p) => p.type !== "video");
+  const videos = sorted.filter((p) => p.type === "video").map((p) => p.url);
   return {
     id: row.id,
     slug: row.slug,
@@ -164,13 +170,14 @@ function mapTourRow(row: Row): Tour {
     status: row.status,
     rating: Number(row.rating_avg ?? 0),
     reviewsCount: row.reviews_count ?? 0,
-    images: [`${row.slug}-1`, `${row.slug}-2`],
+    images: photos.length ? photos.map((p) => p.url) : [`${row.slug}-1`, `${row.slug}-2`],
+    videos,
   };
 }
 
 const STAY_SELECT =
-  "*, organization:organizations(id,name,slug), category:categories(id,slug,label), photos:property_photos(url,sort), amenities:property_amenities(amenity:amenities(label))";
-const TOUR_SELECT = "*, organization:organizations(id,name,slug), category:categories(id,slug,label), vessel:vessels(name)";
+  "*, organization:organizations(id,name,slug), category:categories(id,slug,label), photos:property_photos(url,sort,type), amenities:property_amenities(amenity:amenities(label))";
+const TOUR_SELECT = "*, organization:organizations(id,name,slug), category:categories(id,slug,label), vessel:vessels(name), media:service_media(url,type,sort)";
 
 async function supabaseHomeData() {
   const supabase = createSupabaseServerClient();

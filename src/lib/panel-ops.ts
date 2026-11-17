@@ -373,10 +373,18 @@ export async function updateStay(id: string, input: NewStayInput): Promise<Resul
     .eq("id", id);
   if (error) return { ok: false, error: "Não foi possível salvar as alterações." };
 
-  if (input.imageSeeds.length > 0) {
-    await sb.from("property_photos").delete().eq("property_id", id);
+  // Só troca as artes do projeto (/img/...). Fotos e vídeos enviados pela galeria
+  // (URLs do Storage) são gerenciados na aba "Fotos e vídeos" e não são tocados aqui.
+  const artSeeds = input.imageSeeds.filter((seed) => !seed.startsWith("http"));
+  if (artSeeds.length > 0) {
+    await sb.from("property_photos").delete().eq("property_id", id).like("url", "/img/%");
     await sb.from("property_photos").insert(
-      input.imageSeeds.map((seed, i) => ({ property_id: id, url: `/img/${seed}.jpg`, sort: i, alt: input.name }))
+      artSeeds.map((seed, i) => ({
+        property_id: id,
+        url: seed.startsWith("/") ? seed : `/img/${seed}.jpg`,
+        sort: i,
+        alt: input.name,
+      }))
     );
   }
 

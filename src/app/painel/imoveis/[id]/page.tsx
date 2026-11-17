@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarMonth } from "@/components/booking/CalendarMonth";
+import { MediaManager } from "@/components/panel/MediaManager";
 import { PropertyForm } from "@/components/panel/PropertyForm";
 import { DEMO_MODE } from "@/lib/config";
 import { getDemoBlocks } from "@/lib/demo-data";
@@ -21,7 +22,7 @@ import {
 import { usePanelUser } from "@/lib/use-panel-user";
 import type { ExternalCalendarView, PropertyBlock, Stay } from "@/lib/types";
 
-type Tab = "info" | "calendario" | "ical";
+type Tab = "info" | "midia" | "calendario" | "ical";
 
 export default function ImovelPage({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -75,6 +76,7 @@ export default function ImovelPage({ params }: { params: { id: string } }) {
 
       <div className="flex gap-2 overflow-x-auto">
         <TabButton active={tab === "info"} onClick={() => setTab("info")}>Informações</TabButton>
+        <TabButton active={tab === "midia"} onClick={() => setTab("midia")}>Fotos e vídeos</TabButton>
         <TabButton active={tab === "calendario"} onClick={() => setTab("calendario")}>Calendário e bloqueios</TabButton>
         <TabButton active={tab === "ical"} onClick={() => setTab("ical")}>Calendário externo (iCal)</TabButton>
       </div>
@@ -90,6 +92,7 @@ export default function ImovelPage({ params }: { params: { id: string } }) {
           <PropertyForm initial={stay} submitLabel="Salvar alterações" onSubmit={handleUpdate} />
         ))}
 
+      {tab === "midia" && <MediaManager kind="stay" id={id} />}
       {tab === "calendario" && <CalendarTab stayId={id} staySlug={stay.slug} />}
       {tab === "ical" && <IcalTab propertyId={id} />}
     </div>

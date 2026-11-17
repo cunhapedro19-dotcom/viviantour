@@ -45,7 +45,7 @@ export default function NovoAnuncioAdminPage() {
       window.alert(result.error);
       return false;
     }
-    router.push("/admin/anuncios");
+    router.push(`/admin/anuncios/midia/hospedagem/${result.id}`);
     return true;
   }
 
@@ -59,7 +59,7 @@ export default function NovoAnuncioAdminPage() {
       window.alert(result.error);
       return false;
     }
-    router.push("/admin/anuncios");
+    router.push(`/admin/anuncios/midia/passeio/${result.id}`);
     return true;
   }
 
@@ -68,7 +68,7 @@ export default function NovoAnuncioAdminPage() {
       <header>
         <h1 className="font-display text-2xl font-semibold text-tinta">Novo anúncio</h1>
         <p className="mt-1 text-sm text-tinta-mute">
-          Cadastre uma hospedagem ou um passeio em nome de um fornecedor.
+          Cadastre uma hospedagem ou um passeio em nome de um fornecedor. Ao criar, você já vai para o envio de fotos e vídeos.
         </p>
       </header>
 

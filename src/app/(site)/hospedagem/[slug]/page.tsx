@@ -6,6 +6,7 @@ import { Artwork } from "@/components/Artwork";
 import { FavoriteButton } from "@/components/booking/FavoriteButton";
 import { StayBookingWidget } from "@/components/booking/StayBookingWidget";
 import { ListingCard } from "@/components/ListingCard";
+import { ExtraMedia } from "@/components/site/ExtraMedia";
 import { StarRating } from "@/components/StarRating";
 import { DEMO_MODE } from "@/lib/config";
 import { getDemoBlocks } from "@/lib/demo-data";
@@ -87,6 +88,8 @@ export default async function StayPage({ params }: Props) {
         <Artwork seed={stay.images[1] ?? stay.images[0] ?? ""} alt="" className="h-full w-full rounded-tl-none object-cover" />
         <Artwork seed={stay.images[2] ?? stay.images[0] ?? ""} alt="" className="h-full w-full object-cover" />
       </div>
+
+      <ExtraMedia images={stay.images} videos={stay.videos} skip={3} name={stay.name} />
 
       <div className="grid gap-10 lg:grid-cols-3">
         {/* INFORMAÇÕES */}

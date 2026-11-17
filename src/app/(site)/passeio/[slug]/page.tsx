@@ -5,6 +5,7 @@ import { Artwork } from "@/components/Artwork";
 import { FavoriteButton } from "@/components/booking/FavoriteButton";
 import { TourBookingWidget } from "@/components/booking/TourBookingWidget";
 import { ListingCard } from "@/components/ListingCard";
+import { ExtraMedia } from "@/components/site/ExtraMedia";
 import { StarRating } from "@/components/StarRating";
 import { tourToCard } from "@/lib/card";
 import { formatDuration } from "@/lib/format";
@@ -53,6 +54,8 @@ export default async function TourPage({ params }: Props) {
         <Artwork seed={tour.images[0] ?? ""} alt={tour.name} className="h-full w-full object-cover" eager />
         <Artwork seed={tour.images[1] ?? tour.images[0] ?? ""} alt="" className="h-full w-full object-cover" />
       </div>
+
+      <ExtraMedia images={tour.images} videos={tour.videos} skip={2} name={tour.name} />
 
       <div className="grid gap-10 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">

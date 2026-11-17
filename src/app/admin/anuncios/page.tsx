@@ -75,6 +75,12 @@ export default function AdminAnunciosPage() {
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/admin/anuncios/midia/${l.kind === "stay" ? "hospedagem" : "passeio"}/${l.id}`}
+                        className="btn-outline btn-sm"
+                      >
+                        Fotos e vídeos
+                      </Link>
                       {(l.status === "pending_review" || l.status === "rejected" || l.status === "paused") && (
                         <button type="button" onClick={() => moderate(l, "published")} className="btn-turquesa btn-sm">
                           {l.status === "pending_review" ? "Publicar" : "Reativar"}

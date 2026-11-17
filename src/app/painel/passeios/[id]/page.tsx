@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatBRL, formatDateTimeShort } from "@/lib/format";
+import { MediaManager } from "@/components/panel/MediaManager";
 import { ServiceForm } from "@/components/panel/ServiceForm";
 import { DEMO_MODE } from "@/lib/config";
 import { getCreatedTour } from "@/lib/demo-store";
@@ -16,7 +17,7 @@ import {
 import { usePanelUser } from "@/lib/use-panel-user";
 import type { Departure, Tour } from "@/lib/types";
 
-type Tab = "info" | "saidas";
+type Tab = "info" | "midia" | "saidas";
 
 export default function PasseioPage({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -77,6 +78,15 @@ export default function PasseioPage({ params }: { params: { id: string } }) {
         </button>
         <button
           type="button"
+          onClick={() => setTab("midia")}
+          className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${
+            tab === "midia" ? "bg-oceano-600 text-white" : "border border-areia-200 bg-white text-tinta-soft hover:bg-areia-100"
+          }`}
+        >
+          Fotos e vídeos
+        </button>
+        <button
+          type="button"
           onClick={() => setTab("saidas")}
           className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${
             tab === "saidas" ? "bg-oceano-600 text-white" : "border border-areia-200 bg-white text-tinta-soft hover:bg-areia-100"
@@ -97,6 +107,7 @@ export default function PasseioPage({ params }: { params: { id: string } }) {
           <ServiceForm initial={tour} submitLabel="Salvar alterações" onSubmit={handleUpdate} />
         ))}
 
+      {tab === "midia" && <MediaManager kind="tour" id={id} />}
       {tab === "saidas" && <DeparturesTab tour={tour} />}
     </div>
   );

@@ -73,7 +73,8 @@ export interface Stay {
   status: ListingStatus;
   rating: number;
   reviewsCount: number;
-  images: string[]; // nomes de arquivo em /img (sem extensão)
+  images: string[]; // nomes de arquivo em /img (sem extensão) ou URLs do Storage
+  videos?: string[]; // URLs de vídeos enviados
   amenityLabels: string[];
   featured?: boolean;
 }
@@ -103,6 +104,7 @@ export interface Tour {
   rating: number;
   reviewsCount: number;
   images: string[];
+  videos?: string[];
   featured?: boolean;
 }
 
