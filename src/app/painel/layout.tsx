@@ -35,7 +35,7 @@ export default function PainelLayout({ children }: { children: React.ReactNode }
 
   if (!user) return null;
 
-  if (!user.orgId && !DEMO_MODE) {
+  if (!user.orgId && !DEMO_MODE && user.role !== "admin") {
     return <Onboarding userName={user.name} role={user.role} />;
   }
 
@@ -56,7 +56,7 @@ export default function PainelLayout({ children }: { children: React.ReactNode }
       <aside className="border-b border-areia-200 bg-white lg:min-h-screen lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between p-4 lg:block">
           <Logo />
-          <p className="mt-1 hidden text-xs text-tinta-mute lg:block">{user.orgName ?? "Painel do fornecedor"}</p>
+          <p className="mt-1 hidden text-xs text-tinta-mute lg:block">{user.orgName ?? (user.role === "admin" ? "Acesso administrativo" : "Painel do fornecedor")}</p>
         </div>
         <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:mt-2 lg:flex-col lg:overflow-visible lg:pb-6" aria-label="Menu do painel">
           {NAV.map((item) => {
@@ -88,7 +88,7 @@ export default function PainelLayout({ children }: { children: React.ReactNode }
       {/* CONTEÚDO */}
       <div className="flex-1">
         <header className="flex items-center justify-between border-b border-areia-200 bg-white px-5 py-3.5">
-          <p className="text-sm font-semibold text-tinta">Painel do fornecedor</p>
+          <p className="text-sm font-semibold text-tinta">{user.role === "admin" ? "Administração de hospedagem" : "Painel do fornecedor"}</p>
           <div className="flex items-center gap-3">
             {DEMO_MODE && (
               <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-700">

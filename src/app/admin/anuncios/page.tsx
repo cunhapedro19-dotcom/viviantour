@@ -81,6 +81,11 @@ export default function AdminAnunciosPage() {
                       >
                         Fotos e vídeos
                       </Link>
+                      {l.kind === "stay" && (
+                        <Link href={`/painel/imoveis/${l.id}?asAdmin=1`} className="btn-outline btn-sm">
+                          Calendário
+                        </Link>
+                      )}
                       {(l.status === "pending_review" || l.status === "rejected" || l.status === "paused") && (
                         <button type="button" onClick={() => moderate(l, "published")} className="btn-turquesa btn-sm">
                           {l.status === "pending_review" ? "Publicar" : "Reativar"}

@@ -19,6 +19,10 @@ export function usePanelUser(allowed: Role[] = ["owner", "provider", "admin"]) {
   useEffect(() => {
     let active = true;
     async function load() {
+      const adminPropertyMode =
+        window.location.pathname.startsWith("/painel/imoveis/") &&
+        new URLSearchParams(window.location.search).get("asAdmin") === "1";
+
       if (DEMO_MODE) {
         const demo = getDemoUser();
         if (!active) return;
@@ -26,7 +30,7 @@ export function usePanelUser(allowed: Role[] = ["owner", "provider", "admin"]) {
           window.location.href = "/entrar?next=/painel";
           return;
         }
-        if (demo.role === "admin") {
+        if (demo.role === "admin" && !adminPropertyMode) {
           window.location.href = "/admin";
           return;
         }
@@ -51,7 +55,7 @@ export function usePanelUser(allowed: Role[] = ["owner", "provider", "admin"]) {
         .single();
 
       const role = ((profile?.role as Role) ?? "customer") satisfies Role;
-      if (role === "admin") {
+      if (role === "admin" && !adminPropertyMode) {
         window.location.href = "/admin";
         return;
       }
