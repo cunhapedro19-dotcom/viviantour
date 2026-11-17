@@ -4,5 +4,5 @@
 
 update public.profiles
 set role = 'admin'
-where lower(email) in ('tiodrop22@gmail.com', 'vivanqueiroz022@gmail.com')
+where lower(email) in ('admin', 'tiodrop22@gmail.com', 'vivanqueiroz022@gmail.com')
    or lower(full_name) = 'admin';
