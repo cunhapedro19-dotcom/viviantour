@@ -281,13 +281,15 @@ function IcalTab({ propertyId }: { propertyId: string }) {
         <h2 className="font-display text-lg font-semibold text-tinta">Conectar calendário externo</h2>
         <p className="text-xs text-tinta-mute">
           No Airbnb: Anúncio → Calendário → Disponibilidade → Calendário sincronizado → Exportar
-          calendário. Cole aqui a <strong>URL privada (iCal)</strong>. Ela fica armazenada no
-          servidor e nunca é exposta publicamente.
+          calendário. No Google Agenda: Configurações e compartilhamento → Integrar agenda →
+          endereço secreto em formato iCal. Cole aqui a <strong>URL privada (iCal)</strong>. Ela fica
+          armazenada no servidor e nunca é exposta publicamente.
         </p>
         <div>
           <label className="label" htmlFor="cal-source">Origem</label>
           <select id="cal-source" className="input" value={source} onChange={(e) => setSource(e.target.value)}>
             <option value="airbnb">Airbnb</option>
+            <option value="google">Google Agenda</option>
             <option value="vrbo">Vrbo</option>
             <option value="booking">Booking.com</option>
             <option value="other">Outro (iCal compatível)</option>
@@ -320,7 +322,7 @@ function IcalTab({ propertyId }: { propertyId: string }) {
           <div key={c.id} className="flex items-center justify-between p-4 text-sm">
             <div className="min-w-0">
               <p className="font-medium capitalize text-tinta">
-                {c.source === "airbnb" ? "Airbnb" : c.source === "vrbo" ? "Vrbo" : c.source === "booking" ? "Booking.com" : c.label || "Calendário"}
+                {c.source === "airbnb" ? "Airbnb" : c.source === "google" ? "Google Agenda" : c.source === "vrbo" ? "Vrbo" : c.source === "booking" ? "Booking.com" : c.label || "Calendário"}
               </p>
               <p className="truncate text-xs text-tinta-mute">
                 {c.label || c.source} · {c.lastSyncedAt ? `última sync ${new Date(c.lastSyncedAt).toLocaleString("pt-BR")}` : "aguardando primeira sincronização"}
