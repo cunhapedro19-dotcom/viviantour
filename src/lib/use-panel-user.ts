@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { DEMO_MODE } from "./config";
 import { getDemoUser } from "./demo-store";
 import { getSupabaseBrowserClient } from "./supabase/client";
+import { PANEL_HOME } from "./access-control";
 import type { DemoUser, Role } from "./types";
 
 /**
@@ -19,19 +20,11 @@ export function usePanelUser(allowed: Role[] = ["owner", "provider", "admin"]) {
   useEffect(() => {
     let active = true;
     async function load() {
-      const adminPropertyMode =
-        window.location.pathname.startsWith("/painel/imoveis/") &&
-        new URLSearchParams(window.location.search).get("asAdmin") === "1";
-
       if (DEMO_MODE) {
         const demo = getDemoUser();
         if (!active) return;
         if (!demo || !allowed.includes(demo.role)) {
           window.location.href = "/entrar?next=/painel";
-          return;
-        }
-        if (demo.role === "admin" && !adminPropertyMode) {
-          window.location.href = "/admin";
           return;
         }
         setUser(demo);
@@ -55,12 +48,8 @@ export function usePanelUser(allowed: Role[] = ["owner", "provider", "admin"]) {
         .single();
 
       const role = ((profile?.role as Role) ?? "customer") satisfies Role;
-      if (role === "admin" && !adminPropertyMode) {
-        window.location.href = "/admin";
-        return;
-      }
       if (!allowed.includes(role)) {
-        window.location.href = "/";
+        window.location.href = PANEL_HOME[role];
         return;
       }
 

@@ -7,6 +7,8 @@ import { Logo } from "@/components/Logo";
 import { DEMO_MODE } from "@/lib/config";
 import { setDemoUser } from "@/lib/demo-store";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { postLoginPath } from "@/lib/access-control";
+import type { Role } from "@/lib/types";
 
 export default function EntrarPage() {
   return (
@@ -32,7 +34,7 @@ function EntrarInner() {
     setError(null);
     try {
       const sb = getSupabaseBrowserClient();
-      const { error: err } = await sb.auth.signInWithPassword({ email, password });
+      const { data, error: err } = await sb.auth.signInWithPassword({ email, password });
       if (err) {
         setError(
           err.message === "Invalid login credentials"
@@ -41,7 +43,18 @@ function EntrarInner() {
         );
         return;
       }
-      router.push(next || "/");
+      const { data: profile } = await sb
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user?.id ?? "")
+        .maybeSingle();
+      const role = profile?.role as Role | undefined;
+      if (!role) {
+        setError("Sua conta ainda não possui um perfil de acesso. Tente novamente.");
+        await sb.auth.signOut();
+        return;
+      }
+      router.replace(postLoginPath(role, next));
       router.refresh();
     } finally {
       setBusy(false);
@@ -50,9 +63,7 @@ function EntrarInner() {
 
   function enterDemo(user: { id: string; name: string; email: string; role: "admin" | "owner" | "provider" | "customer"; orgId?: string; orgName?: string }) {
     setDemoUser(user);
-    if (user.role === "admin") router.push("/admin");
-    else if (user.role === "customer") router.push(next || "/minhas-viagens");
-    else router.push(next || "/painel");
+    router.push(postLoginPath(user.role, next));
   }
 
   return (

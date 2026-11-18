@@ -8,6 +8,7 @@ import { DEMO_MODE } from "@/lib/config";
 import { getDemoUser, setDemoUser } from "@/lib/demo-store";
 import type { Role } from "@/lib/types";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { PANEL_HOME } from "@/lib/access-control";
 
 interface HeaderUser {
   name: string;
@@ -72,7 +73,7 @@ export function Header() {
     window.location.href = "/";
   }
 
-  const dashboardHref = user?.role === "admin" ? "/admin" : "/painel";
+  const dashboardHref = user ? PANEL_HOME[user.role] : "/entrar";
   const panelLabel = user?.role === "admin" ? "Painel Viviantourr" : "Meu painel";
 
   return (
@@ -140,9 +141,11 @@ export function Header() {
                 <Link href={dashboardHref} className="rounded-xl px-3 py-2.5 text-sm font-medium text-tinta hover:bg-areia-50">
                   {panelLabel}
                 </Link>
-                <Link href="/minhas-viagens" className="rounded-xl px-3 py-2.5 text-sm font-medium text-tinta-soft hover:bg-areia-50">
-                  Minhas viagens
-                </Link>
+                {user.role === "customer" && (
+                  <Link href="/minhas-viagens" className="rounded-xl px-3 py-2.5 text-sm font-medium text-tinta-soft hover:bg-areia-50">
+                    Minhas viagens
+                  </Link>
+                )}
                 <Link href="/favoritos" className="rounded-xl px-3 py-2.5 text-sm font-medium text-tinta-soft hover:bg-areia-50">
                   Favoritos
                 </Link>
@@ -210,9 +213,11 @@ function UserMenu({
             <Link href={dashboardHref} className="block px-4 py-2.5 text-sm text-tinta hover:bg-areia-50">
               {panelLabel}
             </Link>
-            <Link href="/minhas-viagens" className="block px-4 py-2.5 text-sm text-tinta hover:bg-areia-50">
-              Minhas viagens
-            </Link>
+            {role === "customer" && (
+              <Link href="/minhas-viagens" className="block px-4 py-2.5 text-sm text-tinta hover:bg-areia-50">
+                Minhas viagens
+              </Link>
+            )}
             <Link href="/favoritos" className="block px-4 py-2.5 text-sm text-tinta hover:bg-areia-50">
               Favoritos
             </Link>

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { DEMO_MODE } from "@/lib/config";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { PANEL_HOME } from "@/lib/access-control";
 
 type RoleChoice = "customer" | "owner" | "provider";
 
@@ -51,7 +52,7 @@ export default function CadastroPage() {
         return;
       }
       if (data.session) {
-        router.push(role === "customer" ? "/" : "/painel");
+        router.push(PANEL_HOME[role]);
         router.refresh();
         return;
       }

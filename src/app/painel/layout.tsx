@@ -10,14 +10,6 @@ import { createOrganization } from "@/lib/panel-ops";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { usePanelUser } from "@/lib/use-panel-user";
 
-const NAV = [
-  { href: "/painel", label: "Visão geral", icon: "🏠", exact: true },
-  { href: "/painel/imoveis", label: "Hospedagens", icon: "🏡" },
-  { href: "/painel/passeios", label: "Passeios", icon: "⛵" },
-  { href: "/painel/reservas", label: "Reservas", icon: "📅" },
-  { href: "/painel/financeiro", label: "Financeiro", icon: "💰" },
-];
-
 export default function PainelLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = usePanelUser();
   const pathname = usePathname();
@@ -35,9 +27,19 @@ export default function PainelLayout({ children }: { children: React.ReactNode }
 
   if (!user) return null;
 
-  if (!user.orgId && !DEMO_MODE && user.role !== "admin") {
+  if ((user.role === "owner" || user.role === "provider") && !user.orgId && !DEMO_MODE) {
     return <Onboarding userName={user.name} role={user.role} />;
   }
+
+  const scope = pathname.startsWith("/painel/provider") ? "provider" : "owner";
+  const root = `/painel/${scope}`;
+  const NAV = [
+    { href: root, label: "Visão geral", icon: "🏠", exact: true },
+    ...(scope === "owner" ? [{ href: `${root}/imoveis`, label: "Hospedagens", icon: "🏡" }] : []),
+    ...(scope === "provider" ? [{ href: `${root}/passeios`, label: "Passeios", icon: "⛵" }] : []),
+    { href: `${root}/reservas`, label: "Reservas", icon: "📅" },
+    { href: `${root}/financeiro`, label: "Financeiro", icon: "💰" },
+  ];
 
   async function signOut() {
     if (DEMO_MODE) {
