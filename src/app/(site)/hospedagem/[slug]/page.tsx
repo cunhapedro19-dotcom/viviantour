@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { addDays } from "date-fns";
 import { Artwork } from "@/components/Artwork";
 import { FavoriteButton } from "@/components/booking/FavoriteButton";
-import { StayBookingWidget } from "@/components/booking/StayBookingWidget";
+import { StayInquiryWidget } from "@/components/booking/InquiryWidgets";
 import { ListingCard } from "@/components/ListingCard";
 import { ExtraMedia } from "@/components/site/ExtraMedia";
 import { StarRating } from "@/components/StarRating";
@@ -185,19 +185,12 @@ export default async function StayPage({ params }: Props) {
 
         {/* WIDGET DE RESERVA */}
         <aside>
-          <StayBookingWidget
-            stay={{
-              id: stay.id,
-              slug: stay.slug,
-              name: stay.name,
-              basePriceCents: stay.basePriceCents,
-              cleaningFeeCents: stay.cleaningFeeCents,
-              minNights: stay.minNights,
-              capacity: stay.capacity,
-              orgId: stay.orgId,
-              orgName: stay.orgName,
-            }}
+          <StayInquiryWidget
+            name={stay.name}
+            phone={stay.orgWhatsapp}
             blockedDates={blockedDates}
+            minNights={stay.minNights}
+            capacity={stay.capacity}
           />
         </aside>
       </div>

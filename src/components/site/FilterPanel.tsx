@@ -12,7 +12,6 @@ export function FilterPanel({ categories }: { categories: Category[] }) {
   const tipo = params.get("tipo") ?? "";
   const categoria = params.get("categoria") ?? "";
   const pessoas = params.get("pessoas") ?? "";
-  const precoMax = params.get("precoMax") ?? "";
   const ordem = params.get("ordem") ?? "relevancia";
 
   const relevantCategories = categories.filter((c) => (tipo ? c.kind === tipo : true));
@@ -63,8 +62,6 @@ export function FilterPanel({ categories }: { categories: Category[] }) {
             onChange={(e) => apply({ ordem: e.target.value })}
           >
             <option value="relevancia">Relevância</option>
-            <option value="preco_asc">Menor preço</option>
-            <option value="preco_desc">Maior preço</option>
             <option value="avaliacao">Melhor avaliados</option>
           </select>
         </div>
@@ -82,7 +79,7 @@ export function FilterPanel({ categories }: { categories: Category[] }) {
         />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="label" htmlFor="f-cat">
             Categoria
@@ -118,21 +115,6 @@ export function FilterPanel({ categories }: { categories: Category[] }) {
               </option>
             ))}
           </select>
-        </div>
-        <div>
-          <label className="label" htmlFor="f-preco">
-            Preço máximo: {precoMax ? `R$ ${precoMax}` : "qualquer"}
-          </label>
-          <input
-            id="f-preco"
-            type="range"
-            min={100}
-            max={2000}
-            step={50}
-            value={precoMax || 2000}
-            onChange={(e) => apply({ precoMax: e.target.value === "2000" ? "" : e.target.value })}
-            className="mt-2 w-full accent-turquesa-500"
-          />
         </div>
       </div>
 

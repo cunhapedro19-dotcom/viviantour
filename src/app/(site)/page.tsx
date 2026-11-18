@@ -166,13 +166,13 @@ export default async function HomePage() {
               ),
             },
             {
-              title: "Resposta rápida do anfitrião",
-              text: "Sua solicitação vai direto para o painel do fornecedor, que confirma ou responde em até 24 horas — você acompanha cada etapa.",
+              title: "Atendimento direto pelo WhatsApp",
+              text: "Escolha a hospedagem ou passeio, informe os detalhes principais e envie o pedido pronto para a equipe confirmar com você.",
               icon: <path d="M4 4h16a2 2 0 012 2v9a2 2 0 01-2 2H9l-5 4v-4H4a2 2 0 01-2-2V6a2 2 0 012-2zm3 5h10v2H7V9zm0 4h6v2H7v-2z" />,
             },
             {
-              title: "Avaliações reais, preço justo",
-              text: "Só quem reservou avalia. E a comissão transparente da plataforma permite que fornecedores locais ofereçam o melhor preço.",
+              title: "Experiências locais selecionadas",
+              text: "Conheça opções de hospedagem, passeios e experiências de quem vive e trabalha em Arraial do Cabo.",
               icon: (
                 <path d="M12 21s-7.5-4.7-10-9.3C.4 8.6 2.4 4.5 6.2 4.5c2.2 0 3.7 1.2 4.8 2.7l1 1.4 1-1.4c1.1-1.5 2.6-2.7 4.8-2.7 3.8 0 5.8 4.1 4.2 7.2C19.5 16.3 12 21 12 21z" />
               ),

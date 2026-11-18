@@ -61,6 +61,7 @@ export interface Stay {
   orgId: string;
   orgName: string;
   orgSlug: string;
+  orgWhatsapp?: string | null;
   neighborhood: string;
   city: string;
   state: string;
@@ -92,6 +93,7 @@ export interface Tour {
   orgId: string;
   orgName: string;
   orgSlug: string;
+  orgWhatsapp?: string | null;
   durationMinutes: number;
   meetingPoint: string;
   itinerary: { order: number; title: string; description?: string }[];

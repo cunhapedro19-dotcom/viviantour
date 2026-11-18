@@ -20,8 +20,7 @@ export interface SearchFilters {
   tipo?: "stay" | "tour";
   categoria?: string;
   pessoas?: number;
-  precoMax?: number; // em reais
-  ordem?: "relevancia" | "preco_asc" | "preco_desc" | "avaliacao";
+  ordem?: "relevancia" | "avaliacao";
 }
 
 interface PhotoRow { url: string; sort?: number; type?: string }
@@ -42,7 +41,6 @@ function filterStays(stays: Stay[], f: SearchFilters): Stay[] {
     if (f.tipo && f.tipo !== "stay") return false;
     if (f.categoria && s.categorySlug !== f.categoria) return false;
     if (f.pessoas && s.capacity < f.pessoas) return false;
-    if (f.precoMax && s.basePriceCents > f.precoMax * 100) return false;
     return textMatches(s, f.q);
   });
 }
@@ -53,22 +51,13 @@ function filterTours(tours: Tour[], f: SearchFilters): Tour[] {
     if (f.tipo && f.tipo !== "tour") return false;
     if (f.categoria && t.categorySlug !== f.categoria) return false;
     if (f.pessoas && t.maxGuests < f.pessoas) return false;
-    if (f.precoMax && t.pricePerPersonCents > f.precoMax * 100) return false;
     return textMatches(t, f.q);
   });
 }
 
 function sortListings<T extends Stay | Tour>(items: T[], ordem?: SearchFilters["ordem"]): T[] {
   const copy = [...items];
-  const priceOf = (item: Stay | Tour): number =>
-    "basePriceCents" in item ? item.basePriceCents : item.pricePerPersonCents;
   switch (ordem) {
-    case "preco_asc":
-      copy.sort((a, b) => priceOf(a) - priceOf(b));
-      break;
-    case "preco_desc":
-      copy.sort((a, b) => priceOf(b) - priceOf(a));
-      break;
     case "avaliacao":
       copy.sort((a, b) => b.rating - a.rating);
       break;
@@ -121,6 +110,7 @@ function mapStayRow(row: Row): Stay {
     orgId: row.org_id,
     orgName: row.organization?.name ?? "",
     orgSlug: row.organization?.slug ?? "",
+    orgWhatsapp: row.organization?.whatsapp ?? row.organization?.phone ?? null,
     neighborhood: row.neighborhood ?? "",
     city: row.city ?? "Arraial do Cabo",
     state: row.state ?? "RJ",
@@ -158,6 +148,7 @@ function mapTourRow(row: Row): Tour {
     orgId: row.org_id,
     orgName: row.organization?.name ?? "",
     orgSlug: row.organization?.slug ?? "",
+    orgWhatsapp: row.organization?.whatsapp ?? row.organization?.phone ?? null,
     durationMinutes: row.duration_minutes,
     meetingPoint: row.meeting_point ?? "",
     itinerary: row.itinerary ?? [],
@@ -176,8 +167,8 @@ function mapTourRow(row: Row): Tour {
 }
 
 const STAY_SELECT =
-  "*, organization:organizations(id,name,slug), category:categories(id,slug,label), photos:property_photos(url,sort,type), amenities:property_amenities(amenity:amenities(label))";
-const TOUR_SELECT = "*, organization:organizations(id,name,slug), category:categories(id,slug,label), vessel:vessels(name), media:service_media(url,type,sort)";
+  "*, organization:organizations(id,name,slug,phone,whatsapp), category:categories(id,slug,label), photos:property_photos(url,sort,type), amenities:property_amenities(amenity:amenities(label))";
+const TOUR_SELECT = "*, organization:organizations(id,name,slug,phone,whatsapp), category:categories(id,slug,label), vessel:vessels(name), media:service_media(url,type,sort)";
 
 async function supabaseHomeData() {
   const supabase = createSupabaseServerClient();

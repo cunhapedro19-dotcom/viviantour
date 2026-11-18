@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Artwork } from "@/components/Artwork";
 import { FavoriteButton } from "@/components/booking/FavoriteButton";
-import { TourBookingWidget } from "@/components/booking/TourBookingWidget";
+import { TourInquiryWidget } from "@/components/booking/InquiryWidgets";
 import { ListingCard } from "@/components/ListingCard";
 import { ExtraMedia } from "@/components/site/ExtraMedia";
 import { StarRating } from "@/components/StarRating";
@@ -161,20 +161,11 @@ export default async function TourPage({ params }: Props) {
 
         {/* WIDGET */}
         <aside>
-          <TourBookingWidget
-            tour={{
-              id: tour.id,
-              slug: tour.slug,
-              name: tour.name,
-              pricePerPersonCents: tour.pricePerPersonCents,
-              childPriceCents: tour.childPriceCents ?? null,
-              minGuests: tour.minGuests,
-              maxGuests: tour.maxGuests,
-              orgId: tour.orgId,
-              orgName: tour.orgName,
-              durationMinutes: tour.durationMinutes,
-            }}
+          <TourInquiryWidget
+            name={tour.name}
+            phone={tour.orgWhatsapp}
             departures={departures}
+            maxGuests={tour.maxGuests}
           />
         </aside>
       </div>

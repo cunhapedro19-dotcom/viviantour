@@ -27,7 +27,6 @@ export default async function BuscarPage({ searchParams }: Props) {
     tipo: sp(searchParams, "tipo") === "stay" || sp(searchParams, "tipo") === "tour" ? (sp(searchParams, "tipo") as "stay" | "tour") : undefined,
     categoria: sp(searchParams, "categoria"),
     pessoas: sp(searchParams, "pessoas") ? Number(sp(searchParams, "pessoas")) : undefined,
-    precoMax: sp(searchParams, "precoMax") ? Number(sp(searchParams, "precoMax")) : undefined,
     ordem: (sp(searchParams, "ordem") as SearchFilters["ordem"]) ?? "relevancia",
   };
 
