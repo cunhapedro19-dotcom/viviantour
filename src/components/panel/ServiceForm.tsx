@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Artwork } from "@/components/Artwork";
+import { CreationMediaPicker } from "@/components/panel/CreationMediaPicker";
+import type { MediaItem } from "@/lib/media-ops";
 import { demoStays, demoTours } from "@/lib/demo-data";
 import type { NewTourInput, Tour } from "@/lib/types";
 
@@ -38,6 +40,7 @@ export function ServiceForm({
   const [itinerary, setItinerary] = useState((initial?.itinerary ?? []).map((s) => s.title).join("\n"));
   const [included, setIncluded] = useState((initial?.included ?? []).join("\n"));
   const [seeds, setSeeds] = useState<string[]>(initial?.images ?? []);
+  const [media, setMedia] = useState<MediaItem[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,6 +71,7 @@ export function ServiceForm({
       itinerary: itinerary.split("\n").map((l) => l.trim()).filter(Boolean),
       included: included.split("\n").map((l) => l.trim()).filter(Boolean),
       imageSeeds: seeds,
+      media,
     });
     if (!ok) setBusy(false);
   }
@@ -149,6 +153,7 @@ export function ServiceForm({
       </section>
 
       <section className="card space-y-4 p-6">
+        {!initial && <CreationMediaPicker onChange={setMedia} />}
         <h2 className="font-display text-lg font-semibold text-tinta">Fotos</h2>
         <p className="text-sm text-tinta-mute">
           Selecione as imagens (a primeira é a capa). Upload direto entra na próxima fase.

@@ -127,6 +127,12 @@ export async function uploadMediaFile(
   return { ok: true, url: data.publicUrl, type };
 }
 
+export async function removeUploadedFiles(urls: string[]): Promise<void> {
+  if (DEMO_MODE) return;
+  const paths = urls.map(storagePathOf).filter((path): path is string => Boolean(path));
+  if (paths.length) await getSupabaseBrowserClient().storage.from(BUCKET).remove(paths);
+}
+
 // ---------------------------------------------------------------------------
 // Banco de dados
 // ---------------------------------------------------------------------------
@@ -196,6 +202,6 @@ export async function reorderMedia(kind: MediaKind, ordered: MediaItem[]): Promi
 export async function syncCover(kind: MediaKind, id: string, items: MediaItem[]): Promise<void> {
   const { parent } = tableOf(kind);
   const sb = getSupabaseBrowserClient();
-  const first = items.find((m) => m.type === "image");
+  const first = items[0];
   await sb.from(parent).update({ cover_url: first?.url ?? null }).eq("id", id);
 }

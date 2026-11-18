@@ -19,7 +19,15 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const tour = await getTourBySlugSafe(params.slug);
-  return { title: tour?.name ?? "Passeio" };
+  if (!tour) return { title: "Passeio" };
+  const image = tour.images[0];
+  const imageUrl = image?.startsWith("http") || image?.startsWith("/") ? image : image ? `/img/${image}.jpg` : "/img/og.png";
+  return {
+    title: tour.name,
+    description: tour.summary || `${tour.categoryLabel} em Arraial do Cabo.`,
+    openGraph: { type: "website", locale: "pt_BR", title: tour.name, description: tour.summary, images: [{ url: imageUrl, alt: tour.name }] },
+    twitter: { card: "summary_large_image", title: tour.name, description: tour.summary, images: [imageUrl] },
+  };
 }
 
 export default async function TourPage({ params }: Props) {

@@ -1,4 +1,5 @@
 // Tipos compartilhados entre modo demonstração e modo Supabase.
+import type { MediaItem } from "./media-ops";
 
 export type Role = "admin" | "owner" | "provider" | "customer";
 
@@ -151,6 +152,7 @@ export interface Booking {
   commissionCents: number;
   netCents: number;
   customerName: string;
+  contactPhone?: string | null;
   customerNote?: string | null;
   cancellationReason?: string | null;
   paymentStatus?: PaymentStatus | null;
@@ -227,6 +229,7 @@ export type NewStayInput = {
   description: string;
   amenities: string[];
   imageSeeds: string[];
+  media?: MediaItem[];
 };
 
 export type NewTourInput = {
@@ -244,4 +247,5 @@ export type NewTourInput = {
   itinerary: string[];
   included: string[];
   imageSeeds: string[];
+  media?: MediaItem[];
 };

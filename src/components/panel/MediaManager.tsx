@@ -12,6 +12,7 @@ import {
   uploadMediaFile,
 } from "@/lib/media-ops";
 import type { MediaItem, MediaKind } from "@/lib/media-ops";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 /**
  * Fotos e vídeos de um anúncio. O botão abre a galeria do aparelho
@@ -41,7 +42,13 @@ export function MediaManager({ kind, id }: { kind: MediaKind; id: string }) {
 
     setBusy(true);
     setErrors([]);
-    const folder = `${kind === "stay" ? "imoveis" : "passeios"}/${id}`;
+    const { data: { user } } = await getSupabaseBrowserClient().auth.getUser();
+    if (!user) {
+      setErrors(["Sua sessão expirou. Entre novamente antes de enviar arquivos."]);
+      setBusy(false);
+      return;
+    }
+    const folder = `${user.id}/${kind === "stay" ? "imoveis" : "passeios"}/${id}`;
     let nextSort = (items ?? []).reduce((max, m) => Math.max(max, m.sort), -1) + 1;
     const problems: string[] = [];
 

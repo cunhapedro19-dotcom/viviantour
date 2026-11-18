@@ -22,7 +22,15 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const stay = await getStayBySlugSafe(params.slug);
-  return { title: stay?.name ?? "Hospedagem" };
+  if (!stay) return { title: "Hospedagem" };
+  const image = stay.images[0];
+  const imageUrl = image?.startsWith("http") || image?.startsWith("/") ? image : image ? `/img/${image}.jpg` : "/img/og.png";
+  return {
+    title: stay.name,
+    description: stay.summary || `${stay.categoryLabel} em ${stay.neighborhood}, ${stay.city}.`,
+    openGraph: { type: "website", locale: "pt_BR", title: stay.name, description: stay.summary, images: [{ url: imageUrl, alt: stay.name }] },
+    twitter: { card: "summary_large_image", title: stay.name, description: stay.summary, images: [imageUrl] },
+  };
 }
 
 function expandBlocks(blocks: { startDate: string; endDate: string }[]): string[] {

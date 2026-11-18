@@ -101,6 +101,15 @@ export async function cancelBookingAsProvider(id: string, reason?: string): Prom
   return { ok: true };
 }
 
+export async function markBookingPaid(id: string): Promise<Result> {
+  if (DEMO_MODE) {
+    updateBookingStatus(id, "confirmed");
+    return { ok: true };
+  }
+  const { error } = await getSupabaseBrowserClient().rpc("mark_booking_paid", { p_booking_id: id });
+  return error ? { ok: false, error: friendly(error.message) } : { ok: true };
+}
+
 function friendly(message: string): string {
   if (message.includes("NOT_AVAILABLE")) return "As datas do período já não estão mais disponíveis.";
   if (message.includes("NO_SEATS")) return "As vagas desta saída acabaram de esgotar.";
@@ -123,7 +132,7 @@ export async function fetchOrgBookings(orgId: string): Promise<Booking[]> {
   const { data } = await sb
     .from("bookings")
     .select(
-      "*, customer:profiles!bookings_customer_id_fkey(full_name), property:properties(name,slug), service:services(name,slug), payments(status, method)"
+      "*, customer:profiles!bookings_customer_id_fkey(full_name,phone), property:properties(name,slug), service:services(name,slug), payments(status, method)"
     )
     .eq("org_id", orgId)
     .order("created_at", { ascending: false });
@@ -152,6 +161,7 @@ export async function fetchOrgBookings(orgId: string): Promise<Booking[]> {
       commissionCents: Number(b.commission_cents),
       netCents: Number(b.net_cents),
       customerName: String((b.customer as { full_name?: string } | null)?.full_name ?? "Cliente"),
+      contactPhone: String((b.contact_phone as string | null) ?? (b.customer as { phone?: string } | null)?.phone ?? "") || null,
       customerNote: (b.customer_note as string) ?? null,
       cancellationReason: (b.cancellation_reason as string) ?? null,
       paymentStatus: (pay?.status as PaymentStatus) ?? null,
@@ -323,6 +333,13 @@ export async function createStay(user: DemoUser, input: NewStayInput): Promise<{
     await sb.from("property_photos").insert(
       input.imageSeeds.map((seed, i) => ({ property_id: created.id, url: `/img/${seed}.jpg`, sort: i, alt: input.name }))
     );
+  }
+
+  if (input.media?.length) {
+    const media = input.media.map((item, sort) => ({ property_id: created.id, url: item.url, type: item.type, sort, alt: input.name }));
+    const { error: mediaError } = await sb.from("property_photos").insert(media);
+    if (mediaError) return { ok: false, error: "O anúncio foi criado, mas não foi possível vincular as mídias." };
+    await sb.from("properties").update({ cover_url: input.media[0].url }).eq("id", created.id);
   }
 
   if (input.amenities.length > 0) {
@@ -551,6 +568,12 @@ export async function createTour(user: DemoUser, input: NewTourInput): Promise<{
 
   if (error || !created) {
     return { ok: false, error: "Não foi possível criar o passeio. Verifique os dados." };
+  }
+  if (input.media?.length) {
+    const media = input.media.map((item, sort) => ({ service_id: created.id, url: item.url, type: item.type, sort }));
+    const { error: mediaError } = await sb.from("service_media").insert(media);
+    if (mediaError) return { ok: false, error: "O passeio foi criado, mas não foi possível vincular as mídias." };
+    await sb.from("services").update({ cover_url: input.media[0].url }).eq("id", created.id);
   }
   return { ok: true, id: String(created.id) };
 }

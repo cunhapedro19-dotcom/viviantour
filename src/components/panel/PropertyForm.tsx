@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Artwork } from "@/components/Artwork";
+import { CreationMediaPicker } from "@/components/panel/CreationMediaPicker";
+import type { MediaItem } from "@/lib/media-ops";
 import { demoStays, demoTours } from "@/lib/demo-data";
 import type { NewStayInput, Stay } from "@/lib/types";
 
@@ -58,6 +60,7 @@ export function PropertyForm({
     initial ? AMENITY_OPTIONS.filter((a) => initial.amenityLabels.includes(a.label)).map((a) => a.key) : []
   );
   const [seeds, setSeeds] = useState<string[]>(initial?.images ?? []);
+  const [media, setMedia] = useState<MediaItem[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -88,6 +91,7 @@ export function PropertyForm({
       description: description.trim(),
       amenities,
       imageSeeds: seeds,
+      media,
     });
     if (!ok) setBusy(false);
   }
@@ -172,6 +176,7 @@ export function PropertyForm({
       </section>
 
       <section className="card space-y-4 p-6">
+        {!initial && <CreationMediaPicker onChange={setMedia} />}
         <h2 className="font-display text-lg font-semibold text-tinta">Fotos</h2>
         <p className="text-sm text-tinta-mute">
           Selecione as imagens do anúncio (a primeira é a capa). Upload direto para o Supabase

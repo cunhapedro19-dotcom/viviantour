@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { BookingStatusBadge } from "@/components/StatusBadge";
 import { formatBRL, formatDateTimeShort, formatDateRange } from "@/lib/format";
-import { cancelBookingAsProvider, fetchOrgBookings, respondBooking } from "@/lib/panel-ops";
+import { cancelBookingAsProvider, fetchOrgBookings, markBookingPaid, respondBooking } from "@/lib/panel-ops";
 import { usePanelUser } from "@/lib/use-panel-user";
 import type { Booking, BookingStatus } from "@/lib/types";
 
@@ -39,7 +39,7 @@ export default function ReservasPage() {
     if (user?.orgId) setBookings(await fetchOrgBookings(user.orgId));
   }
 
-  async function act(booking: Booking, action: "accept" | "decline" | "cancel") {
+  async function act(booking: Booking, action: "accept" | "decline" | "cancel" | "paid") {
     setBusyId(booking.id);
     let result;
     if (action === "accept") {
@@ -47,6 +47,9 @@ export default function ReservasPage() {
     } else if (action === "decline") {
       const reason = window.prompt("Motivo da recusa (opcional):") ?? undefined;
       result = await respondBooking(booking.id, false, reason);
+    } else if (action === "paid") {
+      if (!window.confirm("Confirmar que o pagamento desta reserva foi recebido?")) { setBusyId(null); return; }
+      result = await markBookingPaid(booking.id);
     } else {
       if (!window.confirm("Cancelar esta reserva? O cliente será notificado.")) {
         setBusyId(null);
@@ -60,6 +63,12 @@ export default function ReservasPage() {
       return;
     }
     reload();
+  }
+
+  function contact(booking: Booking) {
+    const phone = booking.contactPhone?.replace(/\D/g, "");
+    if (!phone) { window.alert("Este cliente não informou telefone nesta reserva."); return; }
+    window.open(`https://wa.me/${phone.startsWith("55") ? phone : `55${phone}`}?text=${encodeURIComponent(`Olá, ${booking.customerName}! Estou entrando em contato sobre a reserva ${booking.code}.`)}`, "_blank", "noopener,noreferrer");
   }
 
   const filtered = (bookings ?? []).filter((b) => {
@@ -162,6 +171,8 @@ export default function ReservasPage() {
               )}
               {["confirmed", "awaiting_payment"].includes(b.status) && (
                 <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-areia-200 pt-4">
+                  {b.status === "awaiting_payment" && <button type="button" disabled={busyId === b.id} onClick={() => act(b, "paid")} className="btn-turquesa btn-sm">Marcar como pago</button>}
+                  <button type="button" onClick={() => contact(b)} className="btn-outline btn-sm">Falar com cliente</button>
                   <button type="button" disabled={busyId === b.id} onClick={() => act(b, "cancel")} className="btn-danger btn-sm">
                     Cancelar reserva
                   </button>
