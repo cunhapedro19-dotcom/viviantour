@@ -1,5 +1,7 @@
+import ICAL from "ical.js";
+
 /**
- * Parser e gerador de iCalendar (ICS) — sem dependências externas.
+ * Parser e gerador iCalendar; ICAL.js expande recorrências e suas exceções.
  *
  * Suporta o essencial dos feeds do Airbnb (e similares):
  * - DTSTART/DTEND com VALUE=DATE (dia inteiro, DTEND exclusivo)
@@ -7,9 +9,8 @@
  * - Linhas dobradas (continuação com espaço/tab)
  * - STATUS:CANCELLED é ignorado
  *
- * Limitações conhecidas (intencionais): não prometemos sincronização
- * instantânea nem leitura de RRULEs complexas — feeds de marketplace
- * expõem noites ocupadas como eventos concretos.
+ * Recorrências são expandidas em uma janela móvel de um ano passado e três
+ * anos futuros, com limites de processamento. A sincronização não é instantânea.
  */
 
 export interface ICalEvent {
@@ -110,12 +111,23 @@ function parseIcsDate(value: string, params: Record<string, string>): { date: Da
   return { date: new Date(NaN), allDay: false };
 }
 
-export function parseICS(raw: string): ICalEvent[] {
+export function parseICS(raw: string, now = new Date()): ICalEvent[] {
   if (!/^BEGIN:VCALENDAR\s*$/mi.test(raw) || !/^END:VCALENDAR\s*$/mi.test(raw)) {
     throw new Error("Calendário inválido. Use o link de exportação iCal (.ics), sem página de login.");
   }
-  if (/^(RRULE|RDATE|EXDATE|RECURRENCE-ID)[;:]/mi.test(raw)) {
-    throw new Error("Este calendário contém recorrências ainda não suportadas. Exporte os períodos como eventos individuais. Os bloqueios anteriores foram preservados.");
+  // Recurrence rules in VTIMEZONE describe daylight saving, not reservations.
+  // Inspect VEVENT components only and expand recurring families together.
+  let root: InstanceType<typeof ICAL.Component>;
+  try { root = new ICAL.Component(ICAL.parse(raw)); }
+  catch { throw new Error("Calendário iCal inválido ou incompleto. Os bloqueios anteriores foram preservados."); }
+  const components = root.getAllSubcomponents("vevent");
+  const recurringUids = new Set<string>();
+  for (const component of components) {
+    if (["rrule", "rdate", "exdate", "recurrence-id"].some(name => component.hasProperty(name))) {
+      const uid = component.getFirstPropertyValue("uid");
+      if (typeof uid !== "string" || !uid) throw new Error("Evento recorrente sem identificador UID válido.");
+      recurringUids.add(uid);
+    }
   }
   const events: ICalEvent[] = [];
   const lines = unfold(raw);
@@ -133,8 +145,10 @@ export function parseICS(raw: string): ICalEvent[] {
     }
     if (upper === "END:VEVENT") {
       if (current) {
-        const ev = buildEvent(current);
-        if (ev) events.push(ev);
+        if (!recurringUids.has(current.UID?.[0]?.value ?? "")) {
+          const ev = buildEvent(current);
+          if (ev) events.push(ev);
+        }
       }
       current = null;
       continue;
@@ -147,7 +161,92 @@ export function parseICS(raw: string): ICalEvent[] {
     }
   }
   if (current) throw new Error("Calendário inválido: evento incompleto.");
-  return events;
+  return [...events, ...expandRecurringComponents(components, recurringUids, now)];
+}
+
+function expandRecurringComponents(
+  components: InstanceType<typeof ICAL.Component>[], uids: Set<string>, now: Date
+): ICalEvent[] {
+  const out = new Map<string, ICalEvent>();
+  const from = new Date(now);
+  from.setUTCFullYear(from.getUTCFullYear() - 1);
+  const until = new Date(now);
+  until.setUTCFullYear(until.getUTCFullYear() + 3);
+  const deadline = Date.now() + 5000;
+  let steps = 0;
+  const toDate = (time: InstanceType<typeof ICAL.Time>, component: InstanceType<typeof ICAL.Component>, name: string) => {
+    const prop = component.getFirstProperty(name) ?? component.getFirstProperty("dtstart");
+    const tzid = String(prop?.getParameter("tzid") ?? time.zone?.tzid ?? "floating");
+    // Embedded timezone definitions also support custom Apple TZIDs.
+    if (!time.isDate && time.zone?.component) return time.toJSDate();
+    return parseIcsDate(time.toICALString(), {
+      ...(time.isDate ? { VALUE: "DATE" } : {}),
+      ...(!["floating", "UTC", "Z"].includes(tzid) ? { TZID: tzid } : {}),
+    }).date;
+  };
+  const append = (item: InstanceType<typeof ICAL.Event>, startTime: InstanceType<typeof ICAL.Time>, endTime: InstanceType<typeof ICAL.Time>, uid: string) => {
+    const status = String(item.component.getFirstPropertyValue("status") ?? "confirmed").toLowerCase();
+    if (status === "cancelled" || String(item.component.getFirstPropertyValue("transp")).toUpperCase() === "TRANSPARENT") return;
+    const start = toDate(startTime, item.component, "dtstart");
+    const end = toDate(endTime, item.component, "dtend");
+    if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || end <= start) throw new Error("Evento recorrente contém um período inválido.");
+    if (end <= from || start >= until) return;
+    if (out.size >= 10000) throw new Error("Calendário com mais de 10.000 ocupações recorrentes. Os bloqueios anteriores foram preservados.");
+    out.set(uid, { uid, summary: item.summary, start, end, allDay: startTime.isDate, status });
+  };
+  const identity = (uid: string, time: InstanceType<typeof ICAL.Time>, component: InstanceType<typeof ICAL.Component>, name: string) =>
+    `${uid}::${time.isDate ? time.toString() : toDate(time, component, name).toISOString()}`;
+  try {
+    for (const component of components) {
+      const uid = String(component.getFirstPropertyValue("uid") ?? "");
+      if (!uids.has(uid) || component.hasProperty("recurrence-id")) continue;
+      if (String(component.getFirstPropertyValue("status")).toUpperCase() === "CANCELLED") continue;
+      const exceptions = components.filter(c => c.hasProperty("recurrence-id") && c.getFirstPropertyValue("uid") === uid);
+      const exceptionById = new Map(exceptions.map(c => {
+        const exception = new ICAL.Event(c);
+        return [identity(uid, exception.recurrenceId, c, "recurrence-id"), exception];
+      }));
+      const event = new ICAL.Event(component, { exceptions: exceptions.filter(c => String(c.getFirstPropertyValue("status")).toUpperCase() !== "CANCELLED") });
+      if (!component.hasProperty("dtstart")) throw new Error("Evento recorrente sem data de início.");
+      // Validate dates before ICAL.js normalizes them during iteration.
+      for (const prop of unfold(component.toString()).map(parseProp)) {
+        if (prop && ["DTSTART", "DTEND"].includes(prop.name)) {
+          const { TZID: _tzid, ...params } = prop.params;
+          if (!Number.isFinite(parseIcsDate(prop.value, params).date.getTime())) throw new Error("Data inválida no calendário.");
+        }
+      }
+      const iterator = event.iterator();
+      let occurrence;
+      while ((occurrence = iterator.next())) {
+        if (++steps > 100000 || Date.now() > deadline) throw new Error("Calendário com recorrências muito extensas. Os bloqueios anteriores foram preservados.");
+        if (toDate(occurrence, component, "dtstart") >= until) break;
+        const key = identity(uid, occurrence, component, "dtstart");
+        const exception = exceptionById.get(key);
+        if (exception) {
+          if (String(exception.component.getFirstPropertyValue("status")).toUpperCase() !== "CANCELLED") {
+            append(exception, exception.startDate, exception.endDate, key);
+          }
+          continue;
+        }
+        const details = event.getOccurrenceDetails(occurrence);
+        append(details.item, details.startDate, details.endDate, key);
+      }
+    }
+    // Detached exceptions can exist without their master event in exported feeds.
+    // Also covers exceptions moved into the window from a later recurrence date.
+    for (const component of components) {
+      if (!component.hasProperty("recurrence-id")) continue;
+      if (String(component.getFirstPropertyValue("status")).toUpperCase() === "CANCELLED") continue;
+      const master = components.find(c => !c.hasProperty("recurrence-id") && c.getFirstPropertyValue("uid") === component.getFirstPropertyValue("uid"));
+      if (master && String(master.getFirstPropertyValue("status")).toUpperCase() === "CANCELLED") continue;
+      const event = new ICAL.Event(component);
+      const uid = identity(event.uid, event.recurrenceId, component, "recurrence-id");
+      if (!out.has(uid)) append(event, event.startDate, event.endDate, uid);
+    }
+  } catch (err) {
+    throw new Error(`Não foi possível interpretar as recorrências: ${err instanceof Error ? err.message : "regra inválida"}`);
+  }
+  return [...out.values()];
 }
 
 function buildEvent(props: Record<string, RawProp[]>): ICalEvent | null {

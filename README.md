@@ -245,8 +245,11 @@ prevista; o horário no painel é uma previsão.
   e a data da última sincronização bem-sucedida.
 - Links `webcal://` são convertidos para HTTPS. O servidor bloqueia destinos de
   rede privada, verifica redirecionamentos, limita a resposta a 5 MB e aplica timeout.
-- Feeds inválidos e recorrências (`RRULE`, `RDATE`, `EXDATE`, `RECURRENCE-ID`)
-  produzem erro útil sem apagar bloqueios; use eventos individuais para ocupações.
+- Recorrências (`RRULE`, `RDATE`, `EXDATE`, `RECURRENCE-ID`) são importadas com
+  exclusões, remarcações e cancelamentos. Regras de fuso horário do iCloud não
+  são confundidas com ocupações. A janela móvel cobre um ano passado e três
+  anos futuros; a rotina renova essa janela a cada sincronização. Feeds inválidos
+  ou que excedam os limites de processamento geram erro sem apagar bloqueios.
 - Para atualizar a cada 15 minutos, use um agendador externo ou Vercel Pro e ajuste
   juntos o cron, o cálculo de `next_sync_at` na RPC `finish_calendar_sync` e
   `nextSyncTime` em `src/lib/calendar-sync.ts`.
