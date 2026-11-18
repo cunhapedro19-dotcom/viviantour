@@ -73,8 +73,8 @@ export function Header() {
     window.location.href = "/";
   }
 
-  const dashboardHref = user ? PANEL_HOME[user.role] : "/entrar";
-  const panelLabel = user?.role === "admin" ? "Painel Viviantourr" : "Meu painel";
+  const dashboardHref = user?.role === "customer" ? "/perfil" : user ? PANEL_HOME[user.role] : "/entrar";
+  const panelLabel = user?.role === "customer" ? "Meu perfil" : user?.role === "admin" ? "Painel Viviantourr" : "Meu painel";
 
   return (
     <header className="sticky top-0 z-40 border-b border-areia-200 bg-white/95 backdrop-blur">
@@ -144,6 +144,11 @@ export function Header() {
                 {user.role === "customer" && (
                   <Link href="/minhas-viagens" className="rounded-xl px-3 py-2.5 text-sm font-medium text-tinta-soft hover:bg-areia-50">
                     Minhas viagens
+                  </Link>
+                )}
+                {user.role !== "customer" && (
+                  <Link href="/perfil" className="rounded-xl px-3 py-2.5 text-sm font-medium text-tinta-soft hover:bg-areia-50">
+                    Meu perfil
                   </Link>
                 )}
                 <Link href="/favoritos" className="rounded-xl px-3 py-2.5 text-sm font-medium text-tinta-soft hover:bg-areia-50">
@@ -216,6 +221,11 @@ function UserMenu({
             {role === "customer" && (
               <Link href="/minhas-viagens" className="block px-4 py-2.5 text-sm text-tinta hover:bg-areia-50">
                 Minhas viagens
+              </Link>
+            )}
+            {role !== "customer" && (
+              <Link href="/perfil" className="block px-4 py-2.5 text-sm text-tinta hover:bg-areia-50">
+                Meu perfil
               </Link>
             )}
             <Link href="/favoritos" className="block px-4 py-2.5 text-sm text-tinta hover:bg-areia-50">

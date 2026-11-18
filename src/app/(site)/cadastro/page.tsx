@@ -134,8 +134,8 @@ export default function CadastroPage() {
           <input id="fullName" required className="input" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome" />
         </div>
         <div>
-          <label className="label" htmlFor="phone">WhatsApp (opcional)</label>
-          <input id="phone" className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(22) 99999-0000" />
+          <label className="label" htmlFor="phone">Celular / WhatsApp</label>
+          <input id="phone" type="tel" required minLength={10} className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(22) 99999-0000" />
         </div>
         <div>
           <label className="label" htmlFor="email">E-mail</label>

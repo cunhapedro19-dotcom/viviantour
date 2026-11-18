@@ -6,7 +6,7 @@ import type { Role } from "@/lib/types";
 // Rotas que exigem sessão no modo Supabase.
 // No modo demonstração o acesso é liberado e os painéis fazem a guarda
 // própria no cliente (usuários simulados por papel).
-const PROTECTED_PREFIXES = ["/painel", "/admin", "/minhas-viagens", "/favoritos"];
+const PROTECTED_PREFIXES = ["/painel", "/admin", "/minhas-viagens", "/favoritos", "/perfil"];
 
 export async function middleware(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -96,5 +96,6 @@ export const config = {
     "/admin/:path*",
     "/minhas-viagens/:path*",
     "/favoritos/:path*",
+    "/perfil/:path*",
   ],
 };
