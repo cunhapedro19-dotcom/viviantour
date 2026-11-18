@@ -187,6 +187,8 @@ export interface ExternalCalendarView {
   source: string;
   label: string;
   active: boolean;
+  nextSyncAt?: string | null;
+  importedCount?: number;
   lastSyncedAt?: string | null;
   lastStatus?: string | null;
   lastError?: string | null;

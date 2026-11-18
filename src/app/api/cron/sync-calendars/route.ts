@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { parseICS } from "@/lib/ical";
+import { syncCalendar } from "@/lib/calendar-sync";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -17,11 +17,8 @@ export const maxDuration = 60;
  */
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = request.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   let admin;
@@ -42,77 +39,23 @@ export async function GET(request: Request) {
     bookingsCompleted: 0,
   };
 
-  // 1. Calendários ativos com sync pendente (última sincronização > 10 min)
-  const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-  const { data: calendars } = await admin
-    .from("external_calendars")
-    .select("id, property_id, source, ical_url, label, last_synced_at")
-    .eq("active", true)
-    .or(`last_synced_at.is.null,last_synced_at.lt.${tenMinAgo}`)
-    .limit(50);
-
-  for (const cal of calendars ?? []) {
-    summary.calendarsChecked += 1;
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 15000);
-      const response = await fetch(cal.ical_url, {
-        signal: controller.signal,
-        headers: { Accept: "text/calendar" },
-        cache: "no-store",
-      });
-      clearTimeout(timer);
-
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const text = await response.text();
-      const events = parseICS(text);
-
-      // substitui o conjunto de eventos do calendário
-      const { data: existing } = await admin
-        .from("calendar_events")
-        .select("id, uid")
-        .eq("external_calendar_id", cal.id);
-
-      const existingUids = new Set((existing ?? []).map((e: { uid: string }) => e.uid));
-      const incomingUids = new Set(events.map((e) => e.uid));
-
-      if (events.length > 0) {
-        const { error: upsertError } = await admin.from("calendar_events").upsert(
-          events.map((e) => ({
-            external_calendar_id: cal.id,
-            uid: e.uid,
-            summary: e.summary ?? null,
-            starts_at: e.start.toISOString(),
-            ends_at: e.end.toISOString(),
-            all_day: e.allDay,
-            status: e.status,
-          })),
-          { onConflict: "external_calendar_id,uid" }
-        );
-        if (upsertError) throw upsertError;
+  const now = new Date().toISOString();
+  const { data: calendars, error } = await admin.from("external_calendars")
+    .select("id").eq("active", true).lte("next_sync_at", now)
+    .order("next_sync_at").limit(50);
+  if (error) return NextResponse.json({ error: "Falha ao consultar calendários." }, { status: 503 });
+  const deadline = Date.now() + 40000;
+  for (let i = 0; i < (calendars ?? []).length && Date.now() < deadline; i += 3) {
+    await Promise.all((calendars ?? []).slice(i, i + 3).map(async cal => {
+      summary.calendarsChecked++;
+      try {
+        const result = await syncCalendar(cal.id);
+        if (result.ok) summary.eventsUpserted += result.count ?? 0;
+        else if (!result.busy) summary.failures.push(`${cal.id}: ${result.error}`);
+      } catch {
+        summary.failures.push(`${cal.id}: serviço indisponível`);
       }
-      summary.eventsUpserted += events.length;
-
-      const toRemove = (existing ?? [])
-        .filter((e: { uid: string }) => !incomingUids.has(e.uid))
-        .map((e: { id: string }) => e.id);
-      if (toRemove.length > 0) {
-        await admin.from("calendar_events").delete().in("id", toRemove);
-        summary.eventsRemoved += toRemove.length;
-      }
-
-      await admin
-        .from("external_calendars")
-        .update({ last_synced_at: new Date().toISOString(), last_status: "ok", last_error: null })
-        .eq("id", cal.id);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "erro desconhecido";
-      summary.failures.push(`${cal.label ?? cal.id}: ${message}`);
-      await admin
-        .from("external_calendars")
-        .update({ last_synced_at: new Date().toISOString(), last_status: "error", last_error: message })
-        .eq("id", cal.id);
-    }
+    }));
   }
 
   // 2. Conclui reservas com datas passadas

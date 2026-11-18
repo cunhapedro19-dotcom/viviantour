@@ -77,9 +77,11 @@ function parseIcsDate(value: string, params: Record<string, string>): { date: Da
 
   // 20261120 → dia inteiro (meio-dia UTC evita deslocamentos de fuso)
   if (params.VALUE === "DATE" || /^\d{8}$/.test(v)) {
+    if (!/^\d{8}$/.test(v)) throw new Error("Data inválida no calendário.");
     const y = Number(v.slice(0, 4));
     const m = Number(v.slice(4, 6));
     const d = Number(v.slice(6, 8));
+    if (new Date(Date.UTC(y, m - 1, d)).toISOString().slice(0, 10).replace(/-/g, "") !== v) throw new Error("Data inválida no calendário.");
     return { date: new Date(Date.UTC(y, m - 1, d, 12, 0, 0)), allDay: true };
   }
 
@@ -87,23 +89,45 @@ function parseIcsDate(value: string, params: Record<string, string>): { date: Da
   const m = v.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z?)$/);
   if (m) {
     const [, y, mo, d, h, mi, s, z] = m;
-    const utc = z === "Z" ? Date.UTC(+y, +mo - 1, +d, +h, +mi, +s) : Date.UTC(+y, +mo - 1, +d, +h - 3, +mi, +s);
-    return { date: new Date(utc), allDay: false };
+    if (+h > 23 || +mi > 59 || +s > 59 || new Date(Date.UTC(+y, +mo - 1, +d)).toISOString().slice(0, 10).replace(/-/g, "") !== `${y}${mo}${d}`) throw new Error("Data inválida no calendário.");
+    const utc = z === "Z" ? Date.UTC(+y, +mo - 1, +d, +h, +mi, +s) : Date.UTC(+y, +mo - 1, +d, +h + 3, +mi, +s);
+    let date = new Date(utc);
+    if (!z && params.TZID) {
+      const target = Date.UTC(+y, +mo - 1, +d, +h, +mi, +s);
+      const formatter = new Intl.DateTimeFormat("en-US", { timeZone: params.TZID,
+        year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
+      date = new Date(target);
+      for (let i = 0; i < 3; i++) {
+        const parts = Object.fromEntries(formatter.formatToParts(date).map(p => [p.type, p.value]));
+        const rendered = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);
+        date = new Date(date.getTime() + target - rendered);
+      }
+    }
+    return { date, allDay: false };
   }
 
   // fallback: ISO parseável
-  const parsed = new Date(v);
-  return { date: Number.isNaN(parsed.getTime()) ? new Date(NaN) : parsed, allDay: false };
+  return { date: new Date(NaN), allDay: false };
 }
 
 export function parseICS(raw: string): ICalEvent[] {
+  if (!/^BEGIN:VCALENDAR\s*$/mi.test(raw) || !/^END:VCALENDAR\s*$/mi.test(raw)) {
+    throw new Error("Calendário inválido. Use o link de exportação iCal (.ics), sem página de login.");
+  }
+  if (/^(RRULE|RDATE|EXDATE|RECURRENCE-ID)[;:]/mi.test(raw)) {
+    throw new Error("Este calendário contém recorrências ainda não suportadas. Exporte os períodos como eventos individuais. Os bloqueios anteriores foram preservados.");
+  }
   const events: ICalEvent[] = [];
   const lines = unfold(raw);
+  if (lines.filter(l => l.trim().toUpperCase() === "BEGIN:VEVENT").length !== lines.filter(l => l.trim().toUpperCase() === "END:VEVENT").length) {
+    throw new Error("Calendário inválido: eventos incompletos. Os bloqueios anteriores foram preservados.");
+  }
 
   let current: Record<string, RawProp[]> | null = null;
   for (const line of lines) {
     const upper = line.trim().toUpperCase();
     if (upper === "BEGIN:VEVENT") {
+      if (current) throw new Error("Calendário inválido: evento incompleto.");
       current = {};
       continue;
     }
@@ -122,6 +146,7 @@ export function parseICS(raw: string): ICalEvent[] {
       }
     }
   }
+  if (current) throw new Error("Calendário inválido: evento incompleto.");
   return events;
 }
 
@@ -129,7 +154,9 @@ function buildEvent(props: Record<string, RawProp[]>): ICalEvent | null {
   const first = (name: string) => props[name]?.[0];
   const dtStart = first("DTSTART");
   const dtEnd = first("DTEND");
+  if (!dtStart && first("STATUS")?.value.toUpperCase() !== "CANCELLED") throw new Error("Evento sem data de início. Confira o calendário de origem.");
   if (!dtStart) return null;
+  if (first("TRANSP")?.value.toUpperCase() === "TRANSPARENT") return null;
 
   const status = (first("STATUS")?.value ?? "confirmed").toLowerCase();
   if (status === "cancelled") return null;
@@ -139,13 +166,13 @@ function buildEvent(props: Record<string, RawProp[]>): ICalEvent | null {
     ? parseIcsDate(dtEnd.value, dtEnd.params)
     : { date: new Date(startInfo.date.getTime() + 24 * 3600 * 1000), allDay: startInfo.allDay };
 
-  if (Number.isNaN(startInfo.date.getTime())) return null;
+  if (Number.isNaN(startInfo.date.getTime())) throw new Error("Calendário contém uma data inválida.");
   if (Number.isNaN(endInfo.date.getTime()) || endInfo.date <= startInfo.date) {
-    endInfo = { date: new Date(startInfo.date.getTime() + 24 * 3600 * 1000), allDay: startInfo.allDay };
+    throw new Error("Calendário contém um período inválido (fim anterior ao início).");
   }
 
   return {
-    uid: first("UID")?.value ?? `${dtStart.value}-${Math.random().toString(36).slice(2)}`,
+    uid: first("UID")?.value ?? `${dtStart.value}-${dtEnd?.value ?? "one-day"}-${first("SUMMARY")?.value ?? "busy"}`,
     summary: first("SUMMARY")?.value,
     start: startInfo.date,
     end: endInfo.date,

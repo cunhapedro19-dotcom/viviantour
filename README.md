@@ -228,11 +228,30 @@ python3 scripts/generate-artwork.py   # regenera a arte de demonstração (reque
 4. No Supabase, adicione o domínio da Vercel em **Authentication → URL Configuration**
    (Site URL e Redirect URLs, ex.: `https://seu-dominio.vercel.app/auth/callback`).
 
-**Sincronização iCal (cron):** no plano gratuito da Vercel o cron roda 1× ao dia —
-o `vercel.json` já está configurado assim (`0 9 * * *`). Para sincronizar a cada 15
-minutos de graça, cadastre a URL `/api/cron/sync-calendars` (com header
-`Authorization: Bearer <CRON_SECRET>`) em um serviço como o cron-job.org, ou faça
-upgrade do plano Vercel e mude o schedule de volta para `*/15 * * * *`.
+**Sincronização iCal (cron):** automática no backend, diariamente às 09:00 UTC
+(06:00 em Brasília), mesmo com o painel fechado. O `vercel.json` mantém o
+agendamento compatível com o plano Hobby. A Vercel pode executar dentro da hora
+prevista; o horário no painel é uma previsão.
+
+- Aplique `supabase/migrations/0013_calendar_sync.sql` no Supabase.
+- Configure `SUPABASE_SERVICE_ROLE_KEY` e um `CRON_SECRET` forte no ambiente do
+  servidor, além das variáveis públicas do Supabase. Publique novamente o site.
+- A chamada é `GET /api/cron/sync-calendars`, com
+  `Authorization: Bearer <CRON_SECRET>`. Sem o segredo, retorna 401.
+- O botão opcional `Sincronizar agora` usa a sessão autenticada e as mesmas regras
+  de importação da rotina automática. Não é necessário clicar para a rotina rodar.
+- Eventos são substituídos atomicamente por calendário e UID; reservas e bloqueios
+  manuais ficam em suas tabelas originais. Falhas preservam os períodos anteriores
+  e a data da última sincronização bem-sucedida.
+- Links `webcal://` são convertidos para HTTPS. O servidor bloqueia destinos de
+  rede privada, verifica redirecionamentos, limita a resposta a 5 MB e aplica timeout.
+- Feeds inválidos e recorrências (`RRULE`, `RDATE`, `EXDATE`, `RECURRENCE-ID`)
+  produzem erro útil sem apagar bloqueios; use eventos individuais para ocupações.
+- Para atualizar a cada 15 minutos, use um agendador externo ou Vercel Pro e ajuste
+  juntos o cron, o cálculo de `next_sync_at` na RPC `finish_calendar_sync` e
+  `nextSyncTime` em `src/lib/calendar-sync.ts`.
+
+Validação: `node --test tests/calendar.test.cjs`, `npm run typecheck` e `npm run build`.
 
 ## 🔒 Notas de segurança
 

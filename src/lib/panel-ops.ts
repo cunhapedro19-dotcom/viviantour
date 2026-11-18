@@ -1,5 +1,7 @@
 "use client";
 
+import { normalizeCalendarUrl } from "./calendar-url";
+
 // ============================================================================
 // OPERAÇÕES DO PAINEL — funciona nos dois modos:
 //  · Demonstração: grava no demo-store (localStorage)
@@ -765,14 +767,16 @@ export async function fetchExternalCalendars(propertyId: string): Promise<Extern
     active: Boolean(c.active),
     lastSyncedAt: (c.last_synced_at as string) ?? null,
     lastStatus: (c.last_status as string) ?? null,
+    nextSyncAt: (c.next_sync_at as string) ?? null,
+    importedCount: Number(c.imported_count ?? 0),
     lastError: (c.last_error as string) ?? null,
   }));
 }
 
 export async function addExternalCalendar(propertyId: string, input: { source: string; label: string; url: string }): Promise<Result> {
-  if (!input.url.includes("http")) {
-    return { ok: false, error: "Informe a URL iCal completa (começa com https://)." };
-  }
+  let normalizedUrl: string;
+  try { normalizedUrl = normalizeCalendarUrl(input.url); }
+  catch (err) { return { ok: false, error: err instanceof Error ? err.message : "URL inválida." }; }
   if (DEMO_MODE) {
     addExternalCalendarToStore({
       id: `cal-${Date.now()}`,
@@ -791,7 +795,7 @@ export async function addExternalCalendar(propertyId: string, input: { source: s
     property_id: propertyId,
     source: input.source,
     label: input.label || input.source,
-    ical_url: input.url,
+    ical_url: normalizedUrl,
     active: true,
   });
   return error ? { ok: false, error: "Não foi possível conectar o calendário." } : { ok: true };
@@ -841,4 +845,25 @@ export async function createOrganization(
   });
 
   return { ok: true, orgId: String(org.id), orgName: String(org.name) };
+}
+
+export async function syncExternalCalendar(id: string): Promise<Result> {
+  if (DEMO_MODE) return { ok: false, error: "A sincronização real requer conexão com o Supabase." };
+  try {
+    const response = await fetch(`/api/calendars/${encodeURIComponent(id)}/sync`, { method: "POST" });
+    const result = await response.json();
+    return response.ok ? { ok: true } : { ok: false, error: result.error ?? "Não foi possível sincronizar." };
+  } catch { return { ok: false, error: "Falha de conexão. Tente novamente." }; }
+}
+
+export async function fetchPropertyOccupiedDates(propertyId: string): Promise<string[]> {
+  if (DEMO_MODE) return [];
+  const today = new Date();
+  const until = new Date(today);
+  until.setFullYear(until.getFullYear() + 3);
+  const { data, error } = await getSupabaseBrowserClient().rpc("get_property_blocked_dates", {
+    p_property: propertyId, p_from: today.toISOString().slice(0, 10), p_to: until.toISOString().slice(0, 10),
+  });
+  if (error) throw new Error("Não foi possível carregar a disponibilidade.");
+  return (data ?? []).filter((row: { available: boolean }) => !row.available).map((row: { day: string }) => row.day);
 }

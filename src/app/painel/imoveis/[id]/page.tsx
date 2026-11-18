@@ -12,11 +12,13 @@ import { formatDateRange } from "@/lib/format";
 import {
   addBlock,
   fetchBlocks,
+  fetchPropertyOccupiedDates,
   fetchExternalCalendars,
   fetchStayById,
   removeBlock,
   removeExternalCalendarById,
   addExternalCalendar,
+  syncExternalCalendar,
   updateStay,
 } from "@/lib/panel-ops";
 import { usePanelUser } from "@/lib/use-panel-user";
@@ -115,6 +117,7 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
 
 function CalendarTab({ stayId, staySlug }: { stayId: string; staySlug: string }) {
   const { user } = usePanelUser();
+  const [occupied, setOccupied] = useState<string[]>([]);
   const [manual, setManual] = useState<PropertyBlock[]>([]);
   const [demoBlocks] = useState(() => {
     if (!DEMO_MODE) return [];
@@ -127,6 +130,7 @@ function CalendarTab({ stayId, staySlug }: { stayId: string; staySlug: string })
 
   useEffect(() => {
     let active = true;
+    fetchPropertyOccupiedDates(stayId).then(days => { if (active) setOccupied(days); }).catch(() => { if (active) setError("Não foi possível carregar a disponibilidade completa."); });
     fetchBlocks(stayId).then((b) => {
       if (active) setManual(b);
     });
@@ -136,7 +140,7 @@ function CalendarTab({ stayId, staySlug }: { stayId: string; staySlug: string })
   }, [stayId]);
 
   const blockedDates = useMemo(() => {
-    const out: string[] = [];
+    const out: string[] = [...occupied];
     for (const b of [...manual, ...demoBlocks]) {
       let d = new Date(`${b.startDate}T12:00:00`);
       const endD = new Date(`${b.endDate}T12:00:00`);
@@ -146,7 +150,7 @@ function CalendarTab({ stayId, staySlug }: { stayId: string; staySlug: string })
       }
     }
     return out;
-  }, [manual, demoBlocks]);
+  }, [manual, demoBlocks, occupied]);
 
   async function submitBlock(e: React.FormEvent) {
     e.preventDefault();
@@ -161,6 +165,7 @@ function CalendarTab({ stayId, staySlug }: { stayId: string; staySlug: string })
     setEnd("");
     setReason("");
     setManual(await fetchBlocks(stayId));
+    try { setOccupied(await fetchPropertyOccupiedDates(stayId)); } catch { setError("Não foi possível atualizar a disponibilidade."); }
   }
 
   async function remove(id: string) {
@@ -170,6 +175,7 @@ function CalendarTab({ stayId, staySlug }: { stayId: string; staySlug: string })
       return;
     }
     setManual(await fetchBlocks(stayId));
+    try { setOccupied(await fetchPropertyOccupiedDates(stayId)); } catch { setError("Não foi possível atualizar a disponibilidade."); }
   }
 
   return (
@@ -237,6 +243,8 @@ function CalendarTab({ stayId, staySlug }: { stayId: string; staySlug: string })
 }
 
 function IcalTab({ propertyId }: { propertyId: string }) {
+  const [syncing, setSyncing] = useState<string[]>([]);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [calendars, setCalendars] = useState<ExternalCalendarView[]>([]);
   const [source, setSource] = useState("airbnb");
   const [label, setLabel] = useState("");
@@ -248,7 +256,11 @@ function IcalTab({ propertyId }: { propertyId: string }) {
     fetchExternalCalendars(propertyId).then((c) => {
       if (active) setCalendars(c);
     });
+    const timer = setInterval(() => {
+      fetchExternalCalendars(propertyId).then(c => { if (active) setCalendars(c); });
+    }, 10000);
     return () => {
+      clearInterval(timer);
       active = false;
     };
   }, [propertyId]);
@@ -264,6 +276,16 @@ function IcalTab({ propertyId }: { propertyId: string }) {
     setUrl("");
     setLabel("");
     setCalendars(await fetchExternalCalendars(propertyId));
+  }
+
+  async function sync(id: string) {
+    setSyncError(null);
+    setSyncing(previous => [...previous, id]);
+    try {
+      const result = await syncExternalCalendar(id);
+      if (!result.ok) setSyncError(result.error);
+      setCalendars(await fetchExternalCalendars(propertyId));
+    } finally { setSyncing(previous => previous.filter(value => value !== id)); }
   }
 
   async function remove(id: string) {
@@ -306,7 +328,7 @@ function IcalTab({ propertyId }: { propertyId: string }) {
         {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
         <button type="submit" className="btn-primary btn-sm">Conectar calendário</button>
         <p className="text-xs text-tinta-mute">
-          A sincronização roda periodicamente (cron) e importa as noites ocupadas. Não é
+          A sincronização é automática diariamente e importa os períodos ocupados. Não é
           instantânea e não cria reservas automáticas no Airbnb — respeitando os limites do iCal.
         </p>
       </form>
@@ -315,6 +337,7 @@ function IcalTab({ propertyId }: { propertyId: string }) {
         <div className="p-4">
           <h2 className="font-display text-lg font-semibold text-tinta">Calendários conectados</h2>
         </div>
+        {syncError && <p role="alert" className="p-4 text-sm text-red-700">{syncError}</p>}
         {calendars.length === 0 && (
           <p className="p-4 text-sm text-tinta-mute">Nenhum calendário conectado ainda.</p>
         )}
@@ -324,12 +347,19 @@ function IcalTab({ propertyId }: { propertyId: string }) {
               <p className="font-medium capitalize text-tinta">
                 {c.source === "airbnb" ? "Airbnb" : c.source === "google" ? "Google Agenda" : c.source === "vrbo" ? "Vrbo" : c.source === "booking" ? "Booking.com" : c.label || "Calendário"}
               </p>
-              <p className="truncate text-xs text-tinta-mute">
-                {c.label || c.source} · {c.lastSyncedAt ? `última sync ${new Date(c.lastSyncedAt).toLocaleString("pt-BR")}` : "aguardando primeira sincronização"}
-                {c.lastStatus === "error" ? " · erro na última sync" : ""}
+              <p className="text-xs text-tinta-mute">{c.label || c.source}</p>
+              <p role="status" className="text-xs text-tinta-mute">
+                {syncing.includes(c.id) || c.lastStatus === "syncing" ? "Sincronizando…" : c.lastStatus === "ok" ? "Sincronizado" : c.lastStatus === "error" ? "Erro" : "Aguardando sincronização"}
               </p>
+              {c.lastSyncedAt && <p className="text-xs text-tinta-mute">Última sincronização bem-sucedida: {new Date(c.lastSyncedAt).toLocaleString("pt-BR")}</p>}
+              <p className="text-xs text-tinta-mute">Próxima sincronização: {c.nextSyncAt ? new Date(c.nextSyncAt).toLocaleString("pt-BR") : "na próxima execução automática"} (previsão)</p>
+              {c.lastSyncedAt && <p className="text-xs text-tinta-mute">{c.importedCount ?? 0} períodos ocupados importados ou atualizados.</p>}
+              {c.lastStatus === "error" && <p role="alert" className="text-xs text-red-700">{c.lastError}</p>}
             </div>
-            <button type="button" onClick={() => remove(c.id)} className="btn-danger btn-sm">Desconectar</button>
+            <div className="flex shrink-0 flex-col gap-2">
+              <button type="button" disabled={syncing.includes(c.id) || c.lastStatus === "syncing" || !c.active} onClick={() => sync(c.id)} className="btn-primary btn-sm disabled:opacity-50">{syncing.includes(c.id) || c.lastStatus === "syncing" ? "Sincronizando…" : "Sincronizar agora"}</button>
+              <button type="button" disabled={syncing.includes(c.id)} onClick={() => remove(c.id)} className="btn-danger btn-sm">Desconectar</button>
+            </div>
           </div>
         ))}
       </div>
