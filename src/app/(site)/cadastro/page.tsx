@@ -21,6 +21,13 @@ export default function CadastroPage() {
   const [role, setRole] = useState<RoleChoice>("customer");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [street, setStreet] = useState("");
+  const [number, setNumber] = useState("");
+  const [complement, setComplement] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +44,12 @@ export default function CadastroPage() {
         email,
         password,
         options: {
-          data: { full_name: fullName, phone, role },
+          data: {
+            full_name: fullName, phone, role,
+            address_postal_code: postalCode, address_street: street, address_number: number,
+            address_complement: complement, address_neighborhood: neighborhood,
+            address_city: city, address_state: state.toUpperCase(),
+          },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
@@ -137,6 +149,23 @@ export default function CadastroPage() {
           <label className="label" htmlFor="phone">Celular / WhatsApp</label>
           <input id="phone" type="tel" required minLength={10} className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(22) 99999-0000" />
         </div>
+        <fieldset className="space-y-4 rounded-xl border border-areia-200 p-4">
+          <legend className="px-1 text-sm font-semibold text-tinta">Endereço (opcional)</legend>
+          <p className="text-xs text-tinta-mute">Ajuda a planejar futuras saídas e pontos de embarque, como São Gonçalo → Arraial do Cabo.</p>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div><label className="label" htmlFor="postalCode">CEP</label><input id="postalCode" inputMode="numeric" className="input" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="00000-000" /></div>
+            <div className="sm:col-span-2"><label className="label" htmlFor="street">Rua / avenida</label><input id="street" className="input" value={street} onChange={(e) => setStreet(e.target.value)} /></div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div><label className="label" htmlFor="number">Número</label><input id="number" className="input" value={number} onChange={(e) => setNumber(e.target.value)} /></div>
+            <div className="sm:col-span-2"><label className="label" htmlFor="complement">Complemento</label><input id="complement" className="input" value={complement} onChange={(e) => setComplement(e.target.value)} /></div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div><label className="label" htmlFor="neighborhood">Bairro</label><input id="neighborhood" className="input" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} /></div>
+            <div><label className="label" htmlFor="city">Cidade</label><input id="city" className="input" value={city} onChange={(e) => setCity(e.target.value)} placeholder="São Gonçalo" /></div>
+            <div><label className="label" htmlFor="state">UF</label><input id="state" maxLength={2} className="input uppercase" value={state} onChange={(e) => setState(e.target.value.toUpperCase())} placeholder="RJ" /></div>
+          </div>
+        </fieldset>
         <div>
           <label className="label" htmlFor="email">E-mail</label>
           <input id="email" type="email" required className="input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" />
