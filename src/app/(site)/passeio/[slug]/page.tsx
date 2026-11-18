@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Artwork } from "@/components/Artwork";
+import { ListingGallery } from "@/components/site/ListingGallery";
 import { FavoriteButton } from "@/components/booking/FavoriteButton";
 import { TourInquiryWidget } from "@/components/booking/InquiryWidgets";
 import { ListingCard } from "@/components/ListingCard";
@@ -57,11 +57,7 @@ export default async function TourPage({ params }: Props) {
         </div>
       </header>
 
-      {/* GALERIA */}
-      <div className="mb-8 grid h-[300px] grid-cols-2 gap-3 overflow-hidden rounded-3xl sm:h-[420px]">
-        <Artwork seed={tour.images[0] ?? ""} alt={tour.name} className="h-full w-full object-cover" eager />
-        <Artwork seed={tour.images[1] ?? tour.images[0] ?? ""} alt="" className="h-full w-full object-cover" />
-      </div>
+      <ListingGallery images={tour.images} name={tour.name} variant="tour" />
 
       <ExtraMedia images={tour.images} videos={tour.videos} skip={2} name={tour.name} />
 

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { addDays } from "date-fns";
-import { Artwork } from "@/components/Artwork";
+import { addYears } from "date-fns";
+import { ListingGallery } from "@/components/site/ListingGallery";
 import { FavoriteButton } from "@/components/booking/FavoriteButton";
 import { StayInquiryWidget } from "@/components/booking/InquiryWidgets";
 import { ListingCard } from "@/components/ListingCard";
@@ -53,17 +53,21 @@ export default async function StayPage({ params }: Props) {
   const reviews = await getReviewsFor("stay", stay.id);
 
   let blockedDates: string[] = [];
+  let availabilityError = false;
+  let availableThrough: string | undefined;
   if (DEMO_MODE) {
     blockedDates = expandBlocks(getDemoBlocks(stay.id));
   } else {
     const supabase = createSupabaseServerClient();
     const from = new Date();
-    const to = addDays(from, 120);
-    const { data } = await supabase.rpc("get_property_blocked_dates", {
+    const to = addYears(from, 3);
+    availableThrough = to.toISOString().slice(0, 10);
+    const { data, error } = await supabase.rpc("get_property_blocked_dates", {
       p_property: stay.id,
       p_from: from.toISOString().slice(0, 10),
       p_to: to.toISOString().slice(0, 10),
     });
+    availabilityError = Boolean(error);
     blockedDates = (data ?? [])
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .filter((r: any) => !r.available)
@@ -88,14 +92,7 @@ export default async function StayPage({ params }: Props) {
         </div>
       </header>
 
-      {/* GALERIA */}
-      <div className="mb-8 grid h-[300px] grid-cols-3 gap-3 overflow-hidden rounded-3xl sm:h-[440px]">
-        <div className="col-span-2 row-span-2">
-          <Artwork seed={stay.images[0] ?? ""} alt={stay.name} className="h-full w-full object-cover" eager />
-        </div>
-        <Artwork seed={stay.images[1] ?? stay.images[0] ?? ""} alt="" className="h-full w-full rounded-tl-none object-cover" />
-        <Artwork seed={stay.images[2] ?? stay.images[0] ?? ""} alt="" className="h-full w-full object-cover" />
-      </div>
+      <ListingGallery images={stay.images} name={stay.name} variant="stay" />
 
       <ExtraMedia images={stay.images} videos={stay.videos} skip={3} name={stay.name} />
 
@@ -189,6 +186,8 @@ export default async function StayPage({ params }: Props) {
             name={stay.name}
             phone={stay.orgWhatsapp}
             blockedDates={blockedDates}
+            availabilityError={availabilityError}
+            maxDate={availableThrough}
             minNights={stay.minNights}
             capacity={stay.capacity}
           />

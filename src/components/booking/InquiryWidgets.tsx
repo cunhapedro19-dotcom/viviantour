@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Departure } from "@/lib/types";
+import { CalendarMonth } from "./CalendarMonth";
 import { whatsappRequestUrl } from "@/lib/whatsapp";
 import { DEFAULT_WHATSAPP_NUMBER } from "@/lib/config";
 
@@ -17,12 +18,16 @@ export function StayInquiryWidget({
   name,
   phone,
   blockedDates,
+  availabilityError = false,
+  maxDate,
   minNights,
   capacity,
 }: {
   name: string;
   phone?: string | null;
   blockedDates: string[];
+  availabilityError?: boolean;
+  maxDate?: string;
   minNights: number;
   capacity: number;
 }) {
@@ -43,7 +48,18 @@ export function StayInquiryWidget({
   }, [checkIn, checkOut, blocked]);
   const nights = checkIn && checkOut ? Math.round((Date.parse(`${checkOut}T12:00:00`) - Date.parse(`${checkIn}T12:00:00`)) / 86_400_000) : 0;
   const guests = adults + children;
-  const valid = Boolean(checkIn && checkOut && nights >= minNights && guests <= capacity && !unavailable);
+  const valid = Boolean(checkIn && checkOut && nights >= minNights && guests <= capacity && !unavailable && !availabilityError);
+  function pickDate(iso: string) {
+    if (!checkIn || checkOut) {
+      setCheckIn(iso);
+      setCheckOut("");
+    } else if (iso <= checkIn) {
+      setCheckIn(iso);
+      setCheckOut("");
+    } else {
+      setCheckOut(iso);
+    }
+  }
   const message = `Olá! Vim pelo site Viviantourr e gostaria de consultar esta hospedagem:\n\n${name}\nCheck-in: ${checkIn ? format(new Date(`${checkIn}T12:00:00`), "dd/MM/yyyy") : ""}\nCheck-out: ${checkOut ? format(new Date(`${checkOut}T12:00:00`), "dd/MM/yyyy") : ""}\nHóspedes: ${adults} adulto(s)${children ? ` e ${children} criança(s)` : ""}\n\nPode confirmar a disponibilidade e me informar o valor para esse período?`;
   const href = valid ? whatsappRequestUrl(phone, message) : null;
 
@@ -54,9 +70,21 @@ export function StayInquiryWidget({
         <p className="mt-1 text-xs text-tinta-mute">Preencha os dados da viagem para enviar uma mensagem pronta.</p>
       </div>
       <div className="space-y-4 p-5">
-        <div className="grid grid-cols-2 gap-3">
-          <div><label className="label" htmlFor="stay-in">Check-in</label><input id="stay-in" type="date" min={todayIso()} className="input" value={checkIn} onChange={(e) => { setCheckIn(e.target.value); if (checkOut && e.target.value >= checkOut) setCheckOut(""); }} /></div>
-          <div><label className="label" htmlFor="stay-out">Check-out</label><input id="stay-out" type="date" min={checkIn || todayIso()} className="input" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} /></div>
+        <div>
+          <p className="label">Escolha check-in e check-out na agenda</p>
+          {availabilityError ? (
+            <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Não foi possível carregar a disponibilidade desta hospedagem. Tente novamente mais tarde ou fale com a equipe.</p>
+          ) : (
+            <>
+              <CalendarMonth blockedDates={blocked} checkIn={checkIn} checkOut={checkOut} onPick={pickDate} maxDate={maxDate} />
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-tinta-mute">
+                <span>● Datas livres</span><span className="text-areia-400">● Ocupadas ou indisponíveis</span>
+              </div>
+            </>
+          )}
+          <p className="mt-2 text-xs text-tinta-soft">
+            Check-in: {checkIn ? format(new Date(`${checkIn}T12:00:00`), "dd/MM/yyyy") : "selecione uma data"} · Check-out: {checkOut ? format(new Date(`${checkOut}T12:00:00`), "dd/MM/yyyy") : "selecione uma data"}
+          </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div><label className="label" htmlFor="stay-adults">Adultos</label><select id="stay-adults" className="input" value={adults} onChange={(e) => setAdults(Number(e.target.value))}>{Array.from({ length: capacity }, (_, i) => i + 1).map((n) => <option key={n}>{n}</option>)}</select></div>

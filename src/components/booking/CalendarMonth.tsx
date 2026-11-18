@@ -9,11 +9,13 @@ export function CalendarMonth({
   checkIn,
   checkOut,
   onPick,
+  maxDate,
 }: {
   blockedDates: Set<string>;
   checkIn?: string | null;
   checkOut?: string | null;
   onPick: (date: string) => void;
+  maxDate?: string;
 }) {
   const [cursor, setCursor] = useState(() => startOfDay(new Date()));
 
@@ -43,6 +45,7 @@ export function CalendarMonth({
           onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
           className="grid h-8 w-8 place-items-center rounded-full hover:bg-areia-100"
           aria-label="Próximo mês"
+          disabled={Boolean(maxDate && cursor >= new Date(new Date(`${maxDate}T12:00:00`).getFullYear(), new Date(`${maxDate}T12:00:00`).getMonth(), 1))}
         >
           <svg viewBox="0 0 20 20" className="h-4 w-4 fill-tinta-soft">
             <path d="M7.5 4.5L13 10l-5.5 5.5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
@@ -61,7 +64,20 @@ export function CalendarMonth({
           const iso = format(day, "yyyy-MM-dd");
           const isPast = isBefore(day, today);
           const isBlocked = blockedDates.has(iso);
-          const disabled = isPast || isBlocked;
+          const isCheckoutCandidate = Boolean(checkIn && !checkOut && iso > checkIn);
+          let crossesBlockedNight = false;
+          if (isCheckoutCandidate && checkIn) {
+            const cursor = new Date(`${checkIn}T12:00:00`);
+            while (format(cursor, "yyyy-MM-dd") < iso) {
+              if (blockedDates.has(format(cursor, "yyyy-MM-dd"))) {
+                crossesBlockedNight = true;
+                break;
+              }
+              cursor.setDate(cursor.getDate() + 1);
+            }
+          }
+          // A blocked day can still be a checkout day: occupancy ends at checkout.
+          const disabled = isPast || (maxDate ? iso > maxDate : false) || (isBlocked && !isCheckoutCandidate) || crossesBlockedNight;
           const isCheckIn = checkIn === iso;
           const isCheckOut = checkOut === iso;
           const inRange =
