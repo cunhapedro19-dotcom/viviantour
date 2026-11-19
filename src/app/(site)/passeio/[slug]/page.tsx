@@ -17,6 +17,15 @@ interface Props {
   params: { slug: string };
 }
 
+const MARITIME_TOUR_CATEGORIES = new Set([
+  "passeio-de-barco",
+  "escuna",
+  "jet-ski-casal",
+  "jet-ski-individual",
+  "mergulho",
+  "mergulho-de-cilindro",
+]);
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const tour = await getTourBySlugSafe(params.slug);
   if (!tour) return { title: "Passeio" };
@@ -33,6 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function TourPage({ params }: Props) {
   const tour = await getTourBySlugSafe(params.slug);
   if (!tour || tour.status !== "published") notFound();
+  const hasMaritimeConditionsNotice = MARITIME_TOUR_CATEGORIES.has(tour.categorySlug);
 
   const [departures, reviews] = await Promise.all([
     getDeparturesForTour(tour),
@@ -126,9 +136,11 @@ export default async function TourPage({ params }: Props) {
           <section className="rounded-2xl bg-areia-100 p-5">
             <h3 className="font-semibold text-tinta">Ponto de encontro</h3>
             <p className="mt-1 text-sm text-tinta-soft">{tour.meetingPoint}</p>
-            <p className="mt-2 text-xs text-tinta-mute">
-              Chegue com antecedência. O roteiro pode mudar conforme as condições do mar — segurança em primeiro lugar.
-            </p>
+            {hasMaritimeConditionsNotice && (
+              <p className="mt-2 text-xs text-tinta-mute">
+                Chegue com antecedência. O roteiro pode mudar conforme as condições do mar — segurança em primeiro lugar.
+              </p>
+            )}
           </section>
 
           {/* AVALIAÇÕES */}
