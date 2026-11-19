@@ -42,8 +42,30 @@ export function SeasonalPricingPanel({
   const [endsOn, setEndsOn] = useState("");
   const [price, setPrice] = useState("");
   const [priority, setPriority] = useState("0");
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function clearForm() {
+    setLabel("");
+    setDetails("");
+    setStartsOn("");
+    setEndsOn("");
+    setPrice("");
+    setPriority("0");
+    setEditingRuleId(null);
+  }
+
+  function editRule(rule: SeasonalPriceRule) {
+    setError(null);
+    setEditingRuleId(rule.id);
+    setLabel(rule.label ?? "");
+    setDetails(rule.details ?? "");
+    setStartsOn(rule.startsOn);
+    setEndsOn(lastIncludedDate(rule.endsOn));
+    setPrice((rule.priceCents / 100).toFixed(2));
+    setPriority(String(rule.priority ?? 0));
+  }
 
   async function load() {
     if (DEMO_MODE) return;
@@ -60,7 +82,7 @@ export function SeasonalPricingPanel({
 
   useEffect(() => { load(); }, [listingId, kind]);
 
-  async function addRule(event: React.FormEvent) {
+  async function saveRule(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
     if (!startsOn || !price || Number(price) < 0) return setError("Informe o início e o valor da regra.");
@@ -76,13 +98,15 @@ export function SeasonalPricingPanel({
       label: label.trim() || null,
       details: details.trim() || null,
     };
-    const { error: insertError } = await getSupabaseBrowserClient().from("listing_price_rules").insert(payload);
+    const { error: saveError } = editingRuleId
+      ? await getSupabaseBrowserClient().from("listing_price_rules").update(payload).eq("id", editingRuleId)
+      : await getSupabaseBrowserClient().from("listing_price_rules").insert(payload);
     setSaving(false);
-    if (insertError) {
-      setError(insertError.message.includes("PRICE_RULE_OVERLAP") ? "Este período se sobrepõe a uma regra já criada." : "Não foi possível salvar esta regra.");
+    if (saveError) {
+      setError(saveError.message.includes("PRICE_RULE_OVERLAP") ? "Este período se sobrepõe a uma regra já criada." : "Não foi possível salvar esta regra.");
       return;
     }
-    setLabel(""); setDetails(""); setStartsOn(""); setEndsOn(""); setPrice(""); setPriority("0");
+    clearForm();
     await load();
   }
 
@@ -111,14 +135,26 @@ export function SeasonalPricingPanel({
       {kind === "tour" && <p className="mt-3 rounded-xl bg-oceano-50 p-3 text-sm text-oceano-800">Os passeios exibem o menor preço como “A partir de”.</p>}
     </div>
 
-    <form onSubmit={addRule} className="card space-y-4 p-6">
-      <h3 className="font-semibold text-tinta">Nova regra de período</h3>
+    <form onSubmit={saveRule} className="card space-y-4 p-6">
+      {editingRuleId && <div className="flex items-center justify-between gap-3 rounded-xl bg-oceano-50 p-3 text-sm text-oceano-900"><span>Editando este período. Salve para atualizar a regra existente.</span><button type="button" onClick={clearForm} className="btn-secondary btn-sm">Cancelar</button></div>}
+      <h3 className="font-semibold text-tinta">{editingRuleId ? "Editar regra de período" : "Nova regra de período"}</h3>
       <div className="grid gap-3 sm:grid-cols-3"><div><label className="label" htmlFor="season-label">Nome do período</label><input id="season-label" className="input" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Ex.: Feriado" /></div><div><label className="label" htmlFor="season-price">Valor (R$) *</label><input id="season-price" type="number" min="0" step="0.01" required className="input" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="180,00" /></div><div><label className="label" htmlFor="season-priority">Prioridade</label><select id="season-priority" className="input" value={priority} onChange={(e) => setPriority(e.target.value)}><option value="0">Normal</option><option value="10">Preferencial (feriado)</option><option value="20">Máxima</option></select></div></div>
       <div className="grid gap-3 sm:grid-cols-2"><div><label className="label" htmlFor="season-start">Primeiro dia *</label><input id="season-start" type="date" required className="input" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} /></div><div><label className="label" htmlFor="season-end">Último dia</label><input id="season-end" type="date" min={startsOn || undefined} className="input" value={endsOn} onChange={(e) => setEndsOn(e.target.value)} /><p className="mt-1 text-xs text-tinta-mute">Vazio = até nova alteração.</p></div></div>
       <div><label className="label" htmlFor="season-details">O que está incluso / observação</label><input id="season-details" className="input" value={details} onChange={(e) => setDetails(e.target.value)} placeholder="Ex.: Com almoço incluso" /></div>
       {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-      <button type="submit" disabled={saving} className="btn-primary btn-sm">{saving ? "Salvando…" : "Adicionar período"}</button>
+      <button type="submit" disabled={saving} className="btn-primary btn-sm">{saving ? "Salvando…" : editingRuleId ? "Salvar alterações" : "Adicionar período"}</button>
     </form>
+
+    {rules.length > 0 && <div className="card p-5">
+      <label className="label" htmlFor="season-edit">Editar período cadastrado</label>
+      <select id="season-edit" className="input mt-1" value={editingRuleId ?? ""} onChange={(event) => {
+        const rule = rules.find((item) => item.id === event.target.value);
+        if (rule) editRule(rule);
+      }}>
+        <option value="">Selecione um período para editar</option>
+        {rules.map((rule) => <option key={rule.id} value={rule.id}>{rule.label || "Período especial"} — {formatBRL(rule.priceCents)} — {rule.startsOn.split("-").reverse().join("/")}</option>)}
+      </select>
+    </div>}
 
     <div className="card divide-y divide-areia-200"><div className="p-5"><h3 className="font-semibold text-tinta">Períodos cadastrados</h3></div>{!loaded ? <div className="h-16 animate-pulse" /> : rules.length === 0 ? <p className="p-5 text-sm text-tinta-mute">Nenhuma regra por período. O valor padrão continua valendo.</p> : rules.map((rule) => <div key={rule.id} className="flex flex-wrap items-center justify-between gap-3 p-5 text-sm"><div><p className="font-semibold text-tinta">{rule.label || "Período especial"} · {formatBRL(rule.priceCents)} {unit}</p><p className="mt-1 text-tinta-mute">{rule.startsOn.split("-").reverse().join("/")} até {rule.endsOn ? lastIncludedDate(rule.endsOn).split("-").reverse().join("/") : "nova alteração"}{rule.priority ? ` · prioridade ${rule.priority}` : ""}{rule.details ? ` · ${rule.details}` : ""}</p></div><button type="button" onClick={() => removeRule(rule.id)} className="btn-danger btn-sm">Remover</button></div>)}</div>
   </div>;
