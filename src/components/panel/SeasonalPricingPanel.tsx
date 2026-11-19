@@ -42,8 +42,8 @@ export function SeasonalPricingPanel({ kind, listingId, basePriceCents, weekendP
     if (DEMO_MODE) return setError("As regras ficam disponíveis quando o banco estiver conectado.");
     setSaving(true);
     if (ruleKind === "weekend") {
-      const { error: updateError } = await getSupabaseBrowserClient().from(table).update({ weekend_price_cents: priceCents }).eq("id", listingId);
-      setSaving(false); if (updateError) return setError("Não foi possível salvar a regra de fim de semana.");
+      const { data, error: updateError } = await getSupabaseBrowserClient().from(table).update({ weekend_price_cents: priceCents }).eq("id", listingId).select("id").maybeSingle();
+      setSaving(false); if (updateError || !data) return setError(updateError?.message || "Sem permissão para alterar esta regra.");
       onWeekendPriceChange?.(priceCents); reset(); return;
     }
     if (!startsOn) { setSaving(false); return setError("Informe o primeiro dia da regra."); }
@@ -54,7 +54,7 @@ export function SeasonalPricingPanel({ kind, listingId, basePriceCents, weekendP
     reset(); await load();
   }
   async function removeRule(id: string) { if (DEMO_MODE) return; const { error: deleteError } = await getSupabaseBrowserClient().from("listing_price_rules").delete().eq("id", id); if (deleteError) return setError("Não foi possível remover esta regra."); await load(); }
-  async function clearWeekend() { if (DEMO_MODE) return; setSaving(true); const { error: updateError } = await getSupabaseBrowserClient().from(table).update({ weekend_price_cents: null }).eq("id", listingId); setSaving(false); if (updateError) return setError("Não foi possível remover a regra de fim de semana."); onWeekendPriceChange?.(null); reset(); }
+  async function clearWeekend() { if (DEMO_MODE) return; setSaving(true); const { data, error: updateError } = await getSupabaseBrowserClient().from(table).update({ weekend_price_cents: null }).eq("id", listingId).select("id").maybeSingle(); setSaving(false); if (updateError || !data) return setError(updateError?.message || "Sem permissão para remover esta regra."); onWeekendPriceChange?.(null); reset(); }
   async function changeVisibility(value: boolean) { if (DEMO_MODE) return; setSaving(true); const { error: updateError } = await getSupabaseBrowserClient().from("properties").update({ show_public_prices: value }).eq("id", listingId); setSaving(false); if (updateError) return setError("Não foi possível atualizar a visibilidade dos preços."); onVisibilityChange?.(value); }
 
   const isWeekend = ruleKind === "weekend";
