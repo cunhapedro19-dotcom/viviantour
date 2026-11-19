@@ -179,6 +179,8 @@ export default async function TourPage({ params }: Props) {
             startingPriceCents={tour.startingPriceCents ?? tour.pricePerPersonCents}
             priceRules={tour.priceRules ?? []}
             bookingAvailableThrough={tour.bookingAvailableThrough}
+            priceMode={tour.priceMode}
+            priceGroupSize={tour.priceGroupSize}
           />
         </aside>
       </div>

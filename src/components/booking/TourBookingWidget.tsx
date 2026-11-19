@@ -9,12 +9,15 @@ import { DEMO_MODE } from "@/lib/config";
 import { addBooking } from "@/lib/demo-store";
 import { createBookingRequest } from "@/lib/booking-client";
 import type { Departure } from "@/lib/types";
+import { tourPriceLabel } from "@/lib/tour-price";
 
 interface TourLite {
   id: string;
   slug: string;
   name: string;
   pricePerPersonCents: number;
+  priceMode?: "per_person" | "per_group";
+  priceGroupSize?: number | null;
   childPriceCents?: number | null;
   minGuests: number;
   maxGuests: number;
@@ -47,14 +50,17 @@ export function TourBookingWidget({ tour, departures }: { tour: TourLite; depart
 
   const departure = departures.find((d) => d.id === selectedDepartureId) ?? null;
   const guests = adults + children;
+  const priceMode = tour.priceMode ?? "per_person";
+  const maxGuestsForPrice = priceMode === "per_group" ? Math.min(tour.maxGuests, Math.max(1, Number(tour.priceGroupSize) || tour.maxGuests)) : tour.maxGuests;
+  const priceLabel = tourPriceLabel(priceMode, tour.priceGroupSize);
   const childPrice = tour.childPriceCents ?? tour.pricePerPersonCents;
-  const total = departure ? adults * tour.pricePerPersonCents + children * childPrice : 0;
+  const total = departure ? (priceMode === "per_group" ? tour.pricePerPersonCents : adults * tour.pricePerPersonCents + children * childPrice) : 0;
   const seatsLeft = departure ? departure.capacity - departure.seatsBooked : 0;
 
   function validation(): string | null {
     if (!departure) return "Escolha uma data e horário para a saída.";
     if (guests < tour.minGuests) return `Mínimo de ${tour.minGuests} hóspede(s) por reserva.`;
-    if (guests > tour.maxGuests) return `Máximo de ${tour.maxGuests} hóspedes.`;
+    if (guests > maxGuestsForPrice) return `Máximo de ${maxGuestsForPrice} hóspedes para este valor.`;
     if (guests > seatsLeft) return `Restam apenas ${seatsLeft} vaga(s) nesta saída.`;
     return null;
   }
@@ -144,7 +150,7 @@ export function TourBookingWidget({ tour, departures }: { tour: TourLite; depart
       <div className="border-b border-areia-200 bg-areia-50 px-5 py-4">
         <p className="text-lg">
           <span className="font-bold text-tinta">{formatBRL(tour.pricePerPersonCents)}</span>
-          <span className="text-tinta-mute"> / pessoa</span>
+          <span className="text-tinta-mute"> {priceLabel}</span>
         </p>
         <p className="text-xs text-tinta-mute">
           {formatDuration(tour.durationMinutes)} · máx. {tour.maxGuests} hóspedes

@@ -30,6 +30,7 @@ export type BookingStatus =
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 
 export type TourKind = "boat_tour" | "experience" | "guide";
+export type TourPriceMode = "per_person" | "per_group";
 
 export interface Organization {
   id: string;
@@ -104,6 +105,10 @@ export interface Tour {
   itinerary: { order: number; title: string; description?: string }[];
   included: string[];
   pricePerPersonCents: number;
+  /** Define se o valor � individual ou fechado para um grupo. */
+  priceMode?: TourPriceMode;
+  /** Pessoas inclu�das no valor fechado do grupo. */
+  priceGroupSize?: number | null;
   /** Tarifa de sábado e domingo. Vazio = mesma tarifa de dias úteis. */
   weekendPriceCents?: number | null;
   /** Menor valor entre o preço base e as temporadas publicadas. */
@@ -268,6 +273,8 @@ export type NewTourInput = {
   durationMinutes: number;
   meetingPoint: string;
   pricePerPersonCents: number;
+  priceMode: TourPriceMode;
+  priceGroupSize?: number | null;
   maxGuests: number;
   minGuests: number;
   summary: string;

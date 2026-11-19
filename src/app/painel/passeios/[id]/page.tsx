@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatBRL, formatDateTimeShort } from "@/lib/format";
+import { tourPriceLabel } from "@/lib/tour-price";
 import { MediaManager } from "@/components/panel/MediaManager";
 import { ServiceForm } from "@/components/panel/ServiceForm";
 import { SeasonalPricingPanel } from "@/components/panel/SeasonalPricingPanel";
@@ -117,7 +118,7 @@ export default function PasseioPage({ params }: { params: { id: string } }) {
           <ServiceForm initial={tour} submitLabel="Salvar alterações" onSubmit={handleUpdate} />
         ))}
 
-      {tab === "precos" && <SeasonalPricingPanel kind="tour" listingId={tour.id} basePriceCents={tour.pricePerPersonCents} weekendPriceCents={tour.weekendPriceCents} onWeekendPriceChange={(value) => setTour({ ...tour, weekendPriceCents: value })} />}
+      {tab === "precos" && <SeasonalPricingPanel kind="tour" listingId={tour.id} basePriceCents={tour.pricePerPersonCents} priceUnit={tourPriceLabel(tour.priceMode, tour.priceGroupSize)} weekendPriceCents={tour.weekendPriceCents} onWeekendPriceChange={(value) => setTour({ ...tour, weekendPriceCents: value })} />}
 
       {tab === "midia" && <MediaManager kind="tour" id={id} />}
       {tab === "saidas" && <DeparturesTab tour={tour} />}
@@ -190,7 +191,7 @@ function DeparturesTab({ tour }: { tour: Tour }) {
             <input id="dep-cap" type="number" min={1} max={200} required className="input" value={capacity} onChange={(e) => setCapacity(Number(e.target.value))} />
           </div>
           <div>
-            <label className="label" htmlFor="dep-price">Preço (R$, opcional)</label>
+            <label className="label" htmlFor="dep-price">Preço ({tourPriceLabel(tour.priceMode, tour.priceGroupSize)}, opcional)</label>
             <input id="dep-price" type="number" min={0} className="input" value={priceOverride} onChange={(e) => setPriceOverride(e.target.value)} placeholder={String(tour.pricePerPersonCents / 100)} />
           </div>
         </div>
@@ -220,7 +221,7 @@ function DeparturesTab({ tour }: { tour: Tour }) {
                       <div>
                         <p className="font-semibold text-tinta">
                           {new Date(dep.startsAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                          {dep.priceOverrideCents ? ` · ${formatBRL(dep.priceOverrideCents)}/pessoa` : ""}
+                          {dep.priceOverrideCents ? ` · ${formatBRL(dep.priceOverrideCents)} ${tourPriceLabel(tour.priceMode, tour.priceGroupSize)}` : ""}
                         </p>
                         <p className="text-xs text-tinta-mute">
                           {dep.seatsBooked} reserva(s) · {left} vaga(s) disponível(is)

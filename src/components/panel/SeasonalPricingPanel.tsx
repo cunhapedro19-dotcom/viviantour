@@ -14,13 +14,13 @@ function lastIncludedDate(endsOn?: string | null) { if (!endsOn) return ""; cons
 function nextDate(iso: string) { const date = new Date(`${iso}T12:00:00`); date.setDate(date.getDate() + 1); return date.toISOString().slice(0, 10); }
 function ruleLabel(kind?: RuleKind) { return kind === "holiday" ? "Feriado" : kind === "special" ? "Data especial" : "Temporada"; }
 
-export function SeasonalPricingPanel({ kind, listingId, basePriceCents, weekendPriceCents = null, showPublicPrices = false, onVisibilityChange, onWeekendPriceChange }: { kind: Kind; listingId: string; basePriceCents: number; weekendPriceCents?: number | null; showPublicPrices?: boolean; onVisibilityChange?: (value: boolean) => void; onWeekendPriceChange?: (value: number | null) => void; }) {
+export function SeasonalPricingPanel({ kind, listingId, basePriceCents, weekendPriceCents = null, showPublicPrices = false, onVisibilityChange, onWeekendPriceChange, priceUnit }: { kind: Kind; listingId: string; basePriceCents: number; weekendPriceCents?: number | null; showPublicPrices?: boolean; onVisibilityChange?: (value: boolean) => void; onWeekendPriceChange?: (value: number | null) => void; priceUnit?: string; }) {
   const [rules, setRules] = useState<SeasonalPriceRule[]>([]);
   const [loaded, setLoaded] = useState(DEMO_MODE); const [saving, setSaving] = useState(false); const [error, setError] = useState<string | null>(null);
   const [ruleKind, setRuleKind] = useState<FormRuleKind>("seasonal"); const [label, setLabel] = useState(""); const [price, setPrice] = useState(""); const [priority, setPriority] = useState("0"); const [startsOn, setStartsOn] = useState(""); const [endsOn, setEndsOn] = useState(""); const [details, setDetails] = useState(""); const [editingId, setEditingId] = useState<string | null>(null);
   const column = kind === "stay" ? "property_id" : kind === "tour" ? "service_id" : "combo_id";
   const table = kind === "stay" ? "properties" : kind === "tour" ? "services" : "combos";
-  const unit = kind === "stay" ? "por noite" : kind === "tour" ? "por pessoa" : "no pacote";
+  const unit = priceUnit ?? (kind === "stay" ? "por noite" : kind === "tour" ? "por pessoa" : "no pacote");
 
   function reset() { setRuleKind("seasonal"); setLabel(""); setPrice(""); setPriority("0"); setStartsOn(""); setEndsOn(""); setDetails(""); setEditingId(null); }
   function editRule(rule: SeasonalPriceRule) { setError(null); setRuleKind(rule.ruleKind ?? "seasonal"); setLabel(rule.label ?? ""); setPrice((rule.priceCents / 100).toFixed(2)); setPriority(String(rule.priority ?? 0)); setStartsOn(rule.startsOn); setEndsOn(lastIncludedDate(rule.endsOn)); setDetails(rule.details ?? ""); setEditingId(rule.id); }

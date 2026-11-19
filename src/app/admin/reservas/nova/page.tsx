@@ -52,7 +52,7 @@ export default function NovaReservaAdminPage() {
       return nights * stay.basePriceCents + stay.cleaningFeeCents;
     }
     if (!departure) return null;
-    return guests * departure.pricePerPersonCents;
+    return departure.priceMode === "per_group" ? departure.pricePerPersonCents : guests * departure.pricePerPersonCents;
   }, [kind, stay, departure, checkIn, checkOut, guests]);
 
   async function submit(e: React.FormEvent) {

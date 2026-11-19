@@ -179,6 +179,8 @@ function mapTourRow(row: Row): Tour {
     itinerary: row.itinerary ?? [],
     included: row.included ?? [],
     pricePerPersonCents: row.price_per_person_cents,
+    priceMode: row.price_mode ?? "per_person",
+    priceGroupSize: row.price_group_size ?? null,
     weekendPriceCents: row.weekend_price_cents ?? null,
     startingPriceCents,
     priceRules,

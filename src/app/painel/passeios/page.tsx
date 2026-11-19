@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Artwork } from "@/components/Artwork";
 import { ListingStatusBadge } from "@/components/StatusBadge";
 import { formatBRL, formatDuration } from "@/lib/format";
+import { tourPriceShortLabel } from "@/lib/tour-price";
 import { fetchOrgTours, setTourStatus } from "@/lib/panel-ops";
 import { usePanelUser } from "@/lib/use-panel-user";
 import type { Tour } from "@/lib/types";
@@ -76,7 +77,7 @@ export default function PasseiosPage() {
                 </div>
                 <h2 className="mt-1 truncate font-semibold text-tinta">{tour.name}</h2>
                 <p className="text-sm text-tinta-mute">
-                  {formatBRL(tour.pricePerPersonCents)}/pessoa · {formatDuration(tour.durationMinutes)} · até{" "}
+                  {formatBRL(tour.pricePerPersonCents)} {tourPriceShortLabel(tour.priceMode, tour.priceGroupSize)} · {formatDuration(tour.durationMinutes)} · até{" "}
                   {tour.maxGuests} hóspedes
                 </p>
               </div>

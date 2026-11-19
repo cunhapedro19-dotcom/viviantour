@@ -1,5 +1,6 @@
 import type { Stay, Tour } from "./types";
 import { formatBRL, formatDuration } from "./format";
+import { tourPriceLabel } from "./tour-price";
 
 export interface CardData {
   kind: "stay" | "tour";
@@ -41,7 +42,7 @@ export function tourToCard(t: Tour): CardData {
     rating: t.rating,
     reviewsCount: t.reviewsCount,
     images: t.images,
-    priceCaption: `A partir de ${formatBRL(t.startingPriceCents ?? t.pricePerPersonCents)} por pessoa`,
+    priceCaption: `A partir de ${formatBRL(t.startingPriceCents ?? t.pricePerPersonCents)} ${tourPriceLabel(t.priceMode, t.priceGroupSize)}`,
     featured: t.featured,
   };
 }

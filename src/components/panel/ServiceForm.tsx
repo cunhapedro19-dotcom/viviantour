@@ -40,6 +40,8 @@ export function ServiceForm({
   const [duration, setDuration] = useState(initial?.durationMinutes ?? 180);
   const [meetingPoint, setMeetingPoint] = useState(initial?.meetingPoint ?? "");
   const [price, setPrice] = useState(initial ? initial.pricePerPersonCents / 100 : 120);
+  const [priceMode, setPriceMode] = useState<"per_person" | "per_group">(initial?.priceMode ?? "per_person");
+  const [priceGroupSize, setPriceGroupSize] = useState(initial?.priceGroupSize ?? initial?.maxGuests ?? 2);
   const [minGuests, setMinGuests] = useState(initial?.minGuests ?? 1);
   const [maxGuests, setMaxGuests] = useState(initial?.maxGuests ?? 20);
   const [summary, setSummary] = useState(initial?.summary ?? "");
@@ -59,7 +61,11 @@ export function ServiceForm({
     e.preventDefault();
     setError(null);
     if (!name.trim() || price <= 0) {
-      setError("Informe ao menos o nome e o preço por pessoa.");
+      setError("Informe ao menos o nome e o preço.");
+      return;
+    }
+    if (priceMode === "per_group" && (!Number.isInteger(priceGroupSize) || priceGroupSize < 1)) {
+      setError("Informe quantas pessoas estão incluídas no valor do grupo.");
       return;
     }
     setBusy(true);
@@ -71,6 +77,8 @@ export function ServiceForm({
       durationMinutes: duration,
       meetingPoint: meetingPoint.trim(),
       pricePerPersonCents: Math.round(price * 100),
+      priceMode,
+      priceGroupSize: priceMode === "per_group" ? priceGroupSize : null,
       minGuests,
       maxGuests,
       summary: summary.trim(),
@@ -127,9 +135,21 @@ export function ServiceForm({
             <input id="t-dur" type="number" min={15} step={15} className="input" value={duration} onChange={(e) => setDuration(Number(e.target.value))} />
           </div>
           <div>
-            <label className="label" htmlFor="t-price">Preço por pessoa (R$) *</label>
+            <label className="label" htmlFor="t-price-mode">Forma de cobrança</label>
+            <select id="t-price-mode" className="input" value={priceMode} onChange={(e) => setPriceMode(e.target.value as "per_person" | "per_group") }>
+              <option value="per_person">Por pessoa</option>
+              <option value="per_group">Valor fechado por grupo</option>
+            </select>
+          </div>
+          <div>
+            <label className="label" htmlFor="t-price">{priceMode === "per_group" ? "Valor do grupo (R$) *" : "Preço por pessoa (R$) *"}</label>
             <input id="t-price" type="number" min={1} className="input" value={price} onChange={(e) => setPrice(Number(e.target.value))} />
           </div>
+          {priceMode === "per_group" && <div>
+            <label className="label" htmlFor="t-group-size">Pessoas incluídas no grupo</label>
+            <input id="t-group-size" type="number" min={1} max={200} className="input" value={priceGroupSize} onChange={(e) => setPriceGroupSize(Number(e.target.value))} />
+            <p className="mt-1 text-xs text-tinta-mute">Use 2 para casal, 4 para grupo de quatro, e assim por diante.</p>
+          </div>}
           <div>
             <label className="label" htmlFor="t-max">Capacidade máxima</label>
             <input id="t-max" type="number" min={1} max={200} className="input" value={maxGuests} onChange={(e) => setMaxGuests(Number(e.target.value))} />

@@ -479,6 +479,8 @@ export interface BookableDeparture {
   startsAt: string;
   seatsLeft: number;
   pricePerPersonCents: number;
+  priceMode: "per_person" | "per_group";
+  priceGroupSize: number | null;
   serviceName: string;
   orgName: string;
 }
@@ -495,7 +497,7 @@ export async function fetchBookableItems(): Promise<{ stays: BookableStay[]; dep
     sb
       .from("departures")
       .select(
-        "id, starts_at, capacity, seats_booked, price_override_cents, service:services(name, price_per_person_cents, organization:organizations(name))"
+        "id, starts_at, capacity, seats_booked, price_override_cents, service:services(name, price_per_person_cents, price_mode, price_group_size, organization:organizations(name))"
       )
       .eq("status", "open")
       .gte("starts_at", new Date().toISOString())
@@ -518,6 +520,8 @@ export async function fetchBookableItems(): Promise<{ stays: BookableStay[]; dep
     const service = d.service as {
       name?: string;
       price_per_person_cents?: number;
+      price_mode?: "per_person" | "per_group";
+      price_group_size?: number | null;
       organization?: { name?: string } | null;
     } | null;
     return {
@@ -525,6 +529,8 @@ export async function fetchBookableItems(): Promise<{ stays: BookableStay[]; dep
       startsAt: String(d.starts_at),
       seatsLeft: Number(d.capacity) - Number(d.seats_booked),
       pricePerPersonCents: Number(d.price_override_cents ?? service?.price_per_person_cents ?? 0),
+      priceMode: service?.price_mode ?? "per_person",
+      priceGroupSize: Number(service?.price_group_size ?? 0) || null,
       serviceName: String(service?.name ?? "Passeio"),
       orgName: String(service?.organization?.name ?? "—"),
     };
@@ -564,6 +570,7 @@ function bookingError(message: string): string {
     ["DEPARTURE_PAST", "Essa saída já passou."],
     ["SERVICE_NOT_FOUND", "Passeio não encontrado."],
     ["NO_SEATS", "Não há vagas suficientes nesta saída."],
+    ["GROUP_SIZE_EXCEEDED", "Esse valor fechado cobre menos pessoas do que as informadas."],
     ["FORBIDDEN", "Apenas administradores podem criar reservas pelo painel."],
   ];
   const hit = map.find(([code]) => message.includes(code));
