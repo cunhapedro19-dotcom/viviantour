@@ -14,6 +14,13 @@ export const TOUR_CATEGORIES = [
   { slug: "experiencia-nautica", label: "Experiência náutica" },
   { slug: "city-tour", label: "City tour" },
   { slug: "pesca-esportiva", label: "Pesca esportiva" },
+  { slug: "quadriciclo", label: "Quadriciclo" },
+  { slug: "jet-ski-casal", label: "Jet ski casal" },
+  { slug: "jet-ski-individual", label: "Jet ski individual" },
+  { slug: "buggy-arubinha", label: "Buggy Arubinha" },
+  { slug: "buggy-arraial-do-cabo", label: "Buggy Arraial do Cabo" },
+  { slug: "paramotor", label: "Paramotor" },
+  { slug: "mergulho-de-cilindro", label: "Mergulho de cilindro" },
 ];
 
 const IMAGE_POOL = [...demoTours, ...demoStays].flatMap((i) => i.images).slice(0, 18);
@@ -86,7 +93,7 @@ export function ServiceForm({
             <input id="t-name" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: Escuna: 6 praias e ilhas com parada na Fenda" />
           </div>
           <div>
-            <label className="label" htmlFor="t-cat">Categoria</label>
+            <label className="label" htmlFor="t-cat">Tipo de passeio</label>
             <select id="t-cat" className="input" value={category} onChange={(e) => setCategory(e.target.value)}>
               {TOUR_CATEGORIES.map((c) => (
                 <option key={c.slug} value={c.slug}>{c.label}</option>
@@ -94,7 +101,7 @@ export function ServiceForm({
             </select>
           </div>
           <div>
-            <label className="label" htmlFor="t-kind">Tipo</label>
+            <label className="label" htmlFor="t-kind">Formato do serviço</label>
             <select id="t-kind" className="input" value={kind} onChange={(e) => setKind(e.target.value as Tour["kind"])}>
               <option value="boat_tour">Passeio de barco</option>
               <option value="experience">Experiência</option>

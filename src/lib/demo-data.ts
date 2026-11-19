@@ -90,6 +90,13 @@ export const demoCategories: Category[] = [
   { id: "cat-mergulho", slug: "mergulho", label: "Mergulho", kind: "tour", icon: "droplet" },
   { id: "cat-nautica", slug: "experiencia-nautica", label: "Experiências náuticas", kind: "tour", icon: "compass" },
   { id: "cat-citytour", slug: "city-tour", label: "City tours", kind: "tour", icon: "map" },
+  { id: "cat-quadriciclo", slug: "quadriciclo", label: "Quadriciclo", kind: "tour", icon: "mountain" },
+  { id: "cat-jet-casal", slug: "jet-ski-casal", label: "Jet ski casal", kind: "tour", icon: "waves" },
+  { id: "cat-jet-individual", slug: "jet-ski-individual", label: "Jet ski individual", kind: "tour", icon: "waves" },
+  { id: "cat-buggy-arubinha", slug: "buggy-arubinha", label: "Buggy Arubinha", kind: "tour", icon: "car" },
+  { id: "cat-buggy-arraial", slug: "buggy-arraial-do-cabo", label: "Buggy Arraial do Cabo", kind: "tour", icon: "car" },
+  { id: "cat-paramotor", slug: "paramotor", label: "Paramotor", kind: "tour", icon: "wind" },
+  { id: "cat-mergulho-cilindro", slug: "mergulho-de-cilindro", label: "Mergulho de cilindro", kind: "tour", icon: "droplet" },
 ];
 
 const CITY = "Arraial do Cabo";

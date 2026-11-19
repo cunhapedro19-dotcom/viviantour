@@ -20,7 +20,14 @@ insert into public.categories (slug, label, kind, icon, sort) values
   ('mergulho',          'Mergulho',              'tour', 'droplet',    12),
   ('experiencia-nautica','Experiência náutica',  'tour', 'compass',    13),
   ('city-tour',         'City tour',             'tour', 'map',        14),
-  ('pesca-esportiva',   'Pesca esportiva',       'tour', 'fish',       15)
+  ('pesca-esportiva',   'Pesca esportiva',       'tour', 'fish',       15),
+  ('quadriciclo',       'Quadriciclo',           'tour', 'mountain',   16),
+  ('jet-ski-casal',     'Jet ski casal',         'tour', 'waves',      17),
+  ('jet-ski-individual','Jet ski individual',    'tour', 'waves',      18),
+  ('buggy-arubinha',    'Buggy Arubinha',        'tour', 'car',        19),
+  ('buggy-arraial-do-cabo', 'Buggy Arraial do Cabo', 'tour', 'car',     20),
+  ('paramotor',         'Paramotor',             'tour', 'wind',       21),
+  ('mergulho-de-cilindro', 'Mergulho de cilindro','tour', 'droplet',    22)
 on conflict (slug) do nothing;
 
 -- COMODIDADES -----------------------------------------------------------------
