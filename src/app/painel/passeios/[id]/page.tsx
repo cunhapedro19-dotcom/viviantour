@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { formatBRL, formatDateTimeShort } from "@/lib/format";
 import { MediaManager } from "@/components/panel/MediaManager";
 import { ServiceForm } from "@/components/panel/ServiceForm";
+import { SeasonalPricingPanel } from "@/components/panel/SeasonalPricingPanel";
 import { DEMO_MODE } from "@/lib/config";
 import { getCreatedTour } from "@/lib/demo-store";
 import {
@@ -17,7 +18,7 @@ import {
 import { usePanelUser } from "@/lib/use-panel-user";
 import type { Departure, Tour } from "@/lib/types";
 
-type Tab = "info" | "midia" | "saidas";
+type Tab = "info" | "precos" | "midia" | "saidas";
 
 export default function PasseioPage({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -78,6 +79,15 @@ export default function PasseioPage({ params }: { params: { id: string } }) {
         </button>
         <button
           type="button"
+          onClick={() => setTab("precos")}
+          className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${
+            tab === "precos" ? "bg-oceano-600 text-white" : "border border-areia-200 bg-white text-tinta-soft hover:bg-areia-100"
+          }`}
+        >
+          Preços e temporadas
+        </button>
+        <button
+          type="button"
           onClick={() => setTab("midia")}
           className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${
             tab === "midia" ? "bg-oceano-600 text-white" : "border border-areia-200 bg-white text-tinta-soft hover:bg-areia-100"
@@ -106,6 +116,8 @@ export default function PasseioPage({ params }: { params: { id: string } }) {
         ) : (
           <ServiceForm initial={tour} submitLabel="Salvar alterações" onSubmit={handleUpdate} />
         ))}
+
+      {tab === "precos" && <SeasonalPricingPanel kind="tour" listingId={tour.id} basePriceCents={tour.pricePerPersonCents} />}
 
       {tab === "midia" && <MediaManager kind="tour" id={id} />}
       {tab === "saidas" && <DeparturesTab tour={tour} />}

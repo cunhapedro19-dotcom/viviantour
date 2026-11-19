@@ -12,6 +12,7 @@ const NAV = [
   { href: "/admin", label: "Dashboard geral", exact: true },
   { href: "/admin/fornecedores", label: "Fornecedores" },
   { href: "/admin/anuncios", label: "Anúncios" },
+  { href: "/admin/combos", label: "Combos e pacotes" },
   { href: "/admin/reservas", label: "Reservas" },
   { href: "/admin/configuracoes", label: "Configurações" },
 ];

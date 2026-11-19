@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CalendarMonth } from "@/components/booking/CalendarMonth";
 import { MediaManager } from "@/components/panel/MediaManager";
 import { PropertyForm } from "@/components/panel/PropertyForm";
+import { SeasonalPricingPanel } from "@/components/panel/SeasonalPricingPanel";
 import { DEMO_MODE } from "@/lib/config";
 import { getDemoBlocks } from "@/lib/demo-data";
 import { getCreatedStay } from "@/lib/demo-store";
@@ -24,7 +25,7 @@ import {
 import { usePanelUser } from "@/lib/use-panel-user";
 import type { ExternalCalendarView, PropertyBlock, Stay } from "@/lib/types";
 
-type Tab = "info" | "midia" | "calendario" | "ical";
+type Tab = "info" | "precos" | "midia" | "calendario" | "ical";
 
 export default function ImovelPage({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -77,6 +78,7 @@ export default function ImovelPage({ params }: { params: { id: string } }) {
       </header>
 
       <div className="flex gap-2 overflow-x-auto">
+        <TabButton active={tab === "precos"} onClick={() => setTab("precos")}>Preços e temporadas</TabButton>
         <TabButton active={tab === "info"} onClick={() => setTab("info")}>Informações</TabButton>
         <TabButton active={tab === "midia"} onClick={() => setTab("midia")}>Fotos e vídeos</TabButton>
         <TabButton active={tab === "calendario"} onClick={() => setTab("calendario")}>Calendário e bloqueios</TabButton>
@@ -93,6 +95,8 @@ export default function ImovelPage({ params }: { params: { id: string } }) {
         ) : (
           <PropertyForm initial={stay} submitLabel="Salvar alterações" onSubmit={handleUpdate} />
         ))}
+
+      {tab === "precos" && <SeasonalPricingPanel kind="stay" listingId={stay.id} basePriceCents={stay.basePriceCents} showPublicPrices={Boolean(stay.showPublicPrices)} onVisibilityChange={(value) => setStay({ ...stay, showPublicPrices: value })} />}
 
       {tab === "midia" && <MediaManager kind="stay" id={id} />}
       {tab === "calendario" && <CalendarTab stayId={id} staySlug={stay.slug} />}
