@@ -21,8 +21,10 @@ export default async function HomePage() {
   const { stays, tours, categories } = await getHomeData();
 
   const stayCards = stays.slice(0, 4).map(stayToCard);
-  const tourCards = tours.slice(0, 4).map(tourToCard);
-  const experienceCards = tours.slice(4, 8).map(tourToCard);
+  // A ordem da consulta não define o tipo do serviço. Separar pelo formato evita
+  // que, por exemplo, um passeio de buggy apareça na vitrine de embarcações.
+  const boatTourCards = tours.filter((tour) => tour.kind === "boat_tour").slice(0, 4).map(tourToCard);
+  const experienceCards = tours.filter((tour) => tour.kind !== "boat_tour").slice(0, 4).map(tourToCard);
   const stayCategories = categories.filter((c) => c.kind === "stay");
   const tourCategories = categories.filter((c) => c.kind === "tour");
 
@@ -115,13 +117,13 @@ export default async function HomePage() {
               <p className="kicker">Navegue conosco</p>
               <h2 className="section-title">Passeios de barco</h2>
             </div>
-            {tourCards.length > 0 && (
+            {boatTourCards.length > 0 && (
               <Link href="/buscar?tipo=tour" className="btn-outline btn-sm hidden sm:inline-flex">
                 Ver todos
               </Link>
             )}
           </div>
-          {tourCards.length === 0 ? (
+          {boatTourCards.length === 0 ? (
             <EmptyListings
               title="Primeiros passeios chegando"
               text="Escunas, speedboats, mergulho e experiências com operadores locais — em breve no ar."
@@ -129,7 +131,7 @@ export default async function HomePage() {
           ) : (
             <>
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {tourCards.map((card) => (
+              {boatTourCards.map((card) => (
                   <ListingCard key={card.id} data={card} />
                 ))}
               </div>
