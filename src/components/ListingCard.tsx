@@ -103,7 +103,7 @@ export function ListingCard({ data }: { data: CardData }) {
           <StarRating rating={data.rating} count={data.reviewsCount} className="shrink-0" />
         </div>
         <p className="text-sm text-tinta-mute">{data.location}</p>
-        <p className="pt-1 text-sm font-medium text-oceano-700">Consulte disponibilidade</p>
+        <p className="pt-1 text-sm font-medium text-oceano-700">{data.priceCaption ?? "Consulte disponibilidade"}</p>
       </div>
     </Link>
   );

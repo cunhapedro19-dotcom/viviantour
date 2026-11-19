@@ -13,7 +13,7 @@ import {
   getTourBySlug,
 } from "./demo-data";
 import { createSupabaseServerClient } from "./supabase/server";
-import type { Category, Departure, Review, Stay, Tour } from "./types";
+import type { Category, Departure, Review, SeasonalPriceRule, Stay, Tour } from "./types";
 
 export interface SearchFilters {
   q?: string;
@@ -24,6 +24,19 @@ export interface SearchFilters {
 }
 
 interface PhotoRow { url: string; sort?: number; type?: string }
+
+function mapPriceRules(rows: Row[] | null | undefined): SeasonalPriceRule[] {
+  return (rows ?? [])
+    .map((rule) => ({
+      id: String(rule.id),
+      startsOn: String(rule.starts_on),
+      endsOn: rule.ends_on ? String(rule.ends_on) : null,
+      priceCents: Number(rule.price_cents),
+      label: rule.label ?? null,
+      details: rule.details ?? null,
+    }))
+    .sort((a, b) => a.startsOn.localeCompare(b.startsOn));
+}
 
 function textMatches(item: Stay | Tour, q?: string): boolean {
   if (!q) return true;
@@ -99,6 +112,7 @@ function mapStayRow(row: Row): Stay {
   const amenityLabels: string[] = (row.amenities ?? [])
     .map((pa: Row) => pa?.amenity?.label)
     .filter(Boolean);
+  const priceRules = mapPriceRules(row.priceRules);
   return {
     id: row.id,
     slug: row.slug,
@@ -120,6 +134,8 @@ function mapStayRow(row: Row): Stay {
     basePriceCents: row.base_price_cents,
     cleaningFeeCents: row.cleaning_fee_cents ?? 0,
     minNights: row.min_nights ?? 1,
+    showPublicPrices: Boolean(row.show_public_prices),
+    priceRules,
     rules: row.rules,
     status: row.status,
     rating: Number(row.rating_avg ?? 0),
@@ -136,6 +152,11 @@ function mapTourRow(row: Row): Tour {
   const sorted: PhotoRow[] = (row.media ?? []).slice().sort((a: PhotoRow, b: PhotoRow) => (a.sort ?? 0) - (b.sort ?? 0));
   const photos = sorted.filter((p) => p.type !== "video");
   const videos = sorted.filter((p) => p.type === "video").map((p) => p.url);
+  const priceRules = mapPriceRules(row.priceRules);
+  const startingPriceCents = Math.min(
+    Number(row.price_per_person_cents),
+    ...priceRules.map((rule) => rule.priceCents)
+  );
   return {
     id: row.id,
     slug: row.slug,
@@ -154,6 +175,9 @@ function mapTourRow(row: Row): Tour {
     itinerary: row.itinerary ?? [],
     included: row.included ?? [],
     pricePerPersonCents: row.price_per_person_cents,
+    startingPriceCents,
+    priceRules,
+    bookingAvailableThrough: row.booking_available_through ?? null,
     childPriceCents: row.child_price_cents,
     minGuests: row.min_guests ?? 1,
     maxGuests: row.max_guests ?? 10,
@@ -167,8 +191,8 @@ function mapTourRow(row: Row): Tour {
 }
 
 const STAY_SELECT =
-  "*, organization:organizations(id,name,slug,phone,whatsapp), category:categories(id,slug,label), photos:property_photos(url,sort,type), amenities:property_amenities(amenity:amenities(label))";
-const TOUR_SELECT = "*, organization:organizations(id,name,slug,phone,whatsapp), category:categories(id,slug,label), vessel:vessels(name), media:service_media(url,type,sort)";
+  "*, organization:organizations(id,name,slug,phone,whatsapp), category:categories(id,slug,label), photos:property_photos(url,sort,type), amenities:property_amenities(amenity:amenities(label)), priceRules:listing_price_rules!listing_price_rules_property_id_fkey(*)";
+const TOUR_SELECT = "*, organization:organizations(id,name,slug,phone,whatsapp), category:categories(id,slug,label), vessel:vessels(name), media:service_media(url,type,sort), priceRules:listing_price_rules!listing_price_rules_service_id_fkey(*)";
 
 async function supabaseHomeData() {
   const supabase = createSupabaseServerClient();
@@ -217,7 +241,9 @@ async function supabaseDepartures(tour: Tour): Promise<Departure[]> {
     .eq("status", "open")
     .order("starts_at")
     .limit(60);
-  return (data ?? []).map((d: Row) => ({
+  return (data ?? [])
+    .filter((d: Row) => !tour.bookingAvailableThrough || String(d.starts_at).slice(0, 10) <= tour.bookingAvailableThrough)
+    .map((d: Row) => ({
     id: d.id,
     serviceId: d.service_id,
     startsAt: d.starts_at,
@@ -225,8 +251,8 @@ async function supabaseDepartures(tour: Tour): Promise<Departure[]> {
     capacity: d.capacity,
     seatsBooked: d.seats_booked,
     status: d.status,
-    priceOverrideCents: d.price_override_cents,
-  }));
+      priceOverrideCents: d.price_override_cents,
+    }));
 }
 
 async function supabaseReviews(kind: "stay" | "tour", id: string): Promise<Review[]> {

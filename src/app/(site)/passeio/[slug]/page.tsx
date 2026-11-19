@@ -162,6 +162,10 @@ export default async function TourPage({ params }: Props) {
             phone={tour.orgWhatsapp}
             departures={departures}
             maxGuests={tour.maxGuests}
+            basePriceCents={tour.pricePerPersonCents}
+            startingPriceCents={tour.startingPriceCents ?? tour.pricePerPersonCents}
+            priceRules={tour.priceRules ?? []}
+            bookingAvailableThrough={tour.bookingAvailableThrough}
           />
         </aside>
       </div>

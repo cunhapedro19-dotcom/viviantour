@@ -71,6 +71,9 @@ export interface Stay {
   basePriceCents: number;
   cleaningFeeCents: number;
   minNights: number;
+  /** Só é usado quando o anfitrião autoriza mostrar valores ao público. */
+  showPublicPrices?: boolean;
+  priceRules?: SeasonalPriceRule[];
   rules?: string | null;
   status: ListingStatus;
   rating: number;
@@ -99,6 +102,11 @@ export interface Tour {
   itinerary: { order: number; title: string; description?: string }[];
   included: string[];
   pricePerPersonCents: number;
+  /** Menor valor entre o preço base e as temporadas publicadas. */
+  startingPriceCents?: number;
+  priceRules?: SeasonalPriceRule[];
+  /** Última data que o operador aceita reservas, inclusiva. */
+  bookingAvailableThrough?: string | null;
   childPriceCents?: number | null;
   minGuests: number;
   maxGuests: number;
@@ -109,6 +117,16 @@ export interface Tour {
   images: string[];
   videos?: string[];
   featured?: boolean;
+}
+
+export interface SeasonalPriceRule {
+  id: string;
+  startsOn: string;
+  /** Data exclusiva: 2027-01-06 representa disponibilidade até 05/01. */
+  endsOn?: string | null;
+  priceCents: number;
+  label?: string | null;
+  details?: string | null;
 }
 
 export interface Departure {
