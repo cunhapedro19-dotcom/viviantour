@@ -69,6 +69,8 @@ export interface Stay {
   bedrooms: number;
   bathrooms: number;
   basePriceCents: number;
+  /** Tarifa de sábado e domingo. Vazio = mesma tarifa de dias úteis. */
+  weekendPriceCents?: number | null;
   cleaningFeeCents: number;
   minNights: number;
   /** Só é usado quando o anfitrião autoriza mostrar valores ao público. */
@@ -102,6 +104,8 @@ export interface Tour {
   itinerary: { order: number; title: string; description?: string }[];
   included: string[];
   pricePerPersonCents: number;
+  /** Tarifa de sábado e domingo. Vazio = mesma tarifa de dias úteis. */
+  weekendPriceCents?: number | null;
   /** Menor valor entre o preço base e as temporadas publicadas. */
   startingPriceCents?: number;
   priceRules?: SeasonalPriceRule[];
@@ -126,6 +130,7 @@ export interface SeasonalPriceRule {
   endsOn?: string | null;
   priceCents: number;
   priority?: number;
+  ruleKind?: "seasonal" | "holiday" | "special";
   label?: string | null;
   details?: string | null;
 }

@@ -64,20 +64,7 @@ export function CalendarMonth({
           const iso = format(day, "yyyy-MM-dd");
           const isPast = isBefore(day, today);
           const isBlocked = blockedDates.has(iso);
-          const isCheckoutCandidate = Boolean(checkIn && !checkOut && iso > checkIn);
-          let crossesBlockedNight = false;
-          if (isCheckoutCandidate && checkIn) {
-            const cursor = new Date(`${checkIn}T12:00:00`);
-            while (format(cursor, "yyyy-MM-dd") < iso) {
-              if (blockedDates.has(format(cursor, "yyyy-MM-dd"))) {
-                crossesBlockedNight = true;
-                break;
-              }
-              cursor.setDate(cursor.getDate() + 1);
-            }
-          }
-          // A blocked day can still be a checkout day: occupancy ends at checkout.
-          const disabled = isPast || (maxDate ? iso > maxDate : false) || (isBlocked && !isCheckoutCandidate) || crossesBlockedNight;
+          const disabled = isPast || (maxDate ? iso > maxDate : false) || isBlocked;
           const isCheckIn = checkIn === iso;
           const isCheckOut = checkOut === iso;
           const inRange =

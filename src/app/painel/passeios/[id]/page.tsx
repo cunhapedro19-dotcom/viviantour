@@ -117,7 +117,7 @@ export default function PasseioPage({ params }: { params: { id: string } }) {
           <ServiceForm initial={tour} submitLabel="Salvar alterações" onSubmit={handleUpdate} />
         ))}
 
-      {tab === "precos" && <SeasonalPricingPanel kind="tour" listingId={tour.id} basePriceCents={tour.pricePerPersonCents} />}
+      {tab === "precos" && <SeasonalPricingPanel kind="tour" listingId={tour.id} basePriceCents={tour.pricePerPersonCents} weekendPriceCents={tour.weekendPriceCents} onWeekendPriceChange={(value) => setTour({ ...tour, weekendPriceCents: value })} />}
 
       {tab === "midia" && <MediaManager kind="tour" id={id} />}
       {tab === "saidas" && <DeparturesTab tour={tour} />}

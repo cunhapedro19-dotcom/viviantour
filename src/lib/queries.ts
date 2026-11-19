@@ -33,6 +33,7 @@ function mapPriceRules(rows: Row[] | null | undefined): SeasonalPriceRule[] {
       endsOn: rule.ends_on ? String(rule.ends_on) : null,
       priceCents: Number(rule.price_cents),
       priority: Number(rule.priority ?? 0),
+      ruleKind: rule.rule_kind ?? "seasonal",
       label: rule.label ?? null,
       details: rule.details ?? null,
     }))
@@ -133,6 +134,7 @@ function mapStayRow(row: Row): Stay {
     bedrooms: row.bedrooms,
     bathrooms: Number(row.bathrooms),
     basePriceCents: row.base_price_cents,
+    weekendPriceCents: row.weekend_price_cents ?? null,
     cleaningFeeCents: row.cleaning_fee_cents ?? 0,
     minNights: row.min_nights ?? 1,
     showPublicPrices: Boolean(row.show_public_prices),
@@ -156,6 +158,7 @@ function mapTourRow(row: Row): Tour {
   const priceRules = mapPriceRules(row.priceRules);
   const startingPriceCents = Math.min(
     Number(row.price_per_person_cents),
+    ...(row.weekend_price_cents != null ? [Number(row.weekend_price_cents)] : []),
     ...priceRules.map((rule) => rule.priceCents)
   );
   return {
@@ -176,6 +179,7 @@ function mapTourRow(row: Row): Tour {
     itinerary: row.itinerary ?? [],
     included: row.included ?? [],
     pricePerPersonCents: row.price_per_person_cents,
+    weekendPriceCents: row.weekend_price_cents ?? null,
     startingPriceCents,
     priceRules,
     bookingAvailableThrough: row.booking_available_through ?? null,

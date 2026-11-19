@@ -190,6 +190,10 @@ export default async function StayPage({ params }: Props) {
             maxDate={availableThrough}
             minNights={stay.minNights}
             capacity={stay.capacity}
+            basePriceCents={stay.basePriceCents}
+            weekendPriceCents={stay.weekendPriceCents}
+            priceRules={stay.priceRules ?? []}
+            showPublicPrices={stay.showPublicPrices}
           />
         </aside>
       </div>

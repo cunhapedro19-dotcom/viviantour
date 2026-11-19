@@ -96,7 +96,7 @@ export default function ImovelPage({ params }: { params: { id: string } }) {
           <PropertyForm initial={stay} submitLabel="Salvar alterações" onSubmit={handleUpdate} />
         ))}
 
-      {tab === "precos" && <SeasonalPricingPanel kind="stay" listingId={stay.id} basePriceCents={stay.basePriceCents} showPublicPrices={Boolean(stay.showPublicPrices)} onVisibilityChange={(value) => setStay({ ...stay, showPublicPrices: value })} />}
+      {tab === "precos" && <SeasonalPricingPanel kind="stay" listingId={stay.id} basePriceCents={stay.basePriceCents} weekendPriceCents={stay.weekendPriceCents} showPublicPrices={Boolean(stay.showPublicPrices)} onVisibilityChange={(value) => setStay({ ...stay, showPublicPrices: value })} onWeekendPriceChange={(value) => setStay({ ...stay, weekendPriceCents: value })} />}
 
       {tab === "midia" && <MediaManager kind="stay" id={id} />}
       {tab === "calendario" && <CalendarTab stayId={id} staySlug={stay.slug} />}

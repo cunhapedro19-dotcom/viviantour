@@ -163,6 +163,7 @@ export default async function TourPage({ params }: Props) {
             departures={departures}
             maxGuests={tour.maxGuests}
             basePriceCents={tour.pricePerPersonCents}
+            weekendPriceCents={tour.weekendPriceCents}
             startingPriceCents={tour.startingPriceCents ?? tour.pricePerPersonCents}
             priceRules={tour.priceRules ?? []}
             bookingAvailableThrough={tour.bookingAvailableThrough}
