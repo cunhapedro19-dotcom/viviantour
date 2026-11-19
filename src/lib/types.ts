@@ -125,6 +125,7 @@ export interface SeasonalPriceRule {
   /** Data exclusiva: 2027-01-06 representa disponibilidade até 05/01. */
   endsOn?: string | null;
   priceCents: number;
+  priority?: number;
   label?: string | null;
   details?: string | null;
 }

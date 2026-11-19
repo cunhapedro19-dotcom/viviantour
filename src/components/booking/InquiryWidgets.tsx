@@ -51,7 +51,7 @@ export function TourInquiryWidget({ name, phone, departures, maxGuests, basePric
   const available = departures.filter((d) => d.status === "open" && d.capacity > d.seatsBooked && d.startsAt >= new Date().toISOString());
   const [date, setDate] = useState(""); const [departureId, setDepartureId] = useState(""); const [adults, setAdults] = useState(2); const [children, setChildren] = useState(0);
   const sameDayDepartures = available.filter((d) => d.startsAt.slice(0, 10) === date); const departure = sameDayDepartures.find((d) => d.id === departureId); const guests = adults + children;
-  const selectedRule = date ? priceRules.find((rule) => rule.startsOn <= date && (!rule.endsOn || date < rule.endsOn)) : null;
+  const selectedRule = date ? [...priceRules].filter((rule) => rule.startsOn <= date && (!rule.endsOn || date < rule.endsOn)).sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0) || b.startsOn.localeCompare(a.startsOn))[0] : null;
   const selectedPriceCents = selectedRule?.priceCents ?? basePriceCents;
   const afterBookingWindow = Boolean(date && bookingAvailableThrough && date > bookingAvailableThrough);
   const valid = Boolean(date && !afterBookingWindow && guests <= maxGuests && (!departure || guests <= departure.capacity - departure.seatsBooked));

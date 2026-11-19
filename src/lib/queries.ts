@@ -32,10 +32,11 @@ function mapPriceRules(rows: Row[] | null | undefined): SeasonalPriceRule[] {
       startsOn: String(rule.starts_on),
       endsOn: rule.ends_on ? String(rule.ends_on) : null,
       priceCents: Number(rule.price_cents),
+      priority: Number(rule.priority ?? 0),
       label: rule.label ?? null,
       details: rule.details ?? null,
     }))
-    .sort((a, b) => a.startsOn.localeCompare(b.startsOn));
+    .sort((a, b) => a.startsOn.localeCompare(b.startsOn) || (b.priority ?? 0) - (a.priority ?? 0));
 }
 
 function textMatches(item: Stay | Tour, q?: string): boolean {

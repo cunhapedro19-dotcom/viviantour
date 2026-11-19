@@ -75,6 +75,9 @@ export default function AdminAnunciosPage() {
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="flex flex-wrap gap-2">
+                      <Link href={l.kind === "stay" ? `/painel/imoveis/${l.id}?asAdmin=1` : `/painel/passeios/${l.id}?asAdmin=1`} className="btn-outline btn-sm">
+                        Editar anúncio
+                      </Link>
                       <Link
                         href={`/admin/anuncios/midia/${l.kind === "stay" ? "hospedagem" : "passeio"}/${l.id}`}
                         className="btn-outline btn-sm"
