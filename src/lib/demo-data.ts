@@ -89,6 +89,7 @@ export const demoCategories: Category[] = [
   { id: "cat-escuna", slug: "escuna", label: "Escunas", kind: "tour", icon: "sailboat" },
   { id: "cat-mergulho", slug: "mergulho", label: "Mergulho", kind: "tour", icon: "droplet" },
   { id: "cat-nautica", slug: "experiencia-nautica", label: "Experiências náuticas", kind: "tour", icon: "compass" },
+  { id: "cat-bate-volta", slug: "bate-e-volta", label: "Bate e volta", kind: "tour", icon: "bus" },
   { id: "cat-citytour", slug: "city-tour", label: "City tours", kind: "tour", icon: "map" },
   { id: "cat-quadriciclo", slug: "quadriciclo", label: "Quadriciclo", kind: "tour", icon: "mountain" },
   { id: "cat-jet-casal", slug: "jet-ski-casal", label: "Jet ski casal", kind: "tour", icon: "waves" },

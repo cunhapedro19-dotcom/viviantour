@@ -12,6 +12,7 @@ export const TOUR_CATEGORIES = [
   { slug: "escuna", label: "Passeio de escuna" },
   { slug: "mergulho", label: "Mergulho" },
   { slug: "experiencia-nautica", label: "Experiência náutica" },
+  { slug: "bate-e-volta", label: "Bate e volta" },
   { slug: "city-tour", label: "City tour" },
   { slug: "pesca-esportiva", label: "Pesca esportiva" },
   { slug: "quadriciclo", label: "Quadriciclo" },

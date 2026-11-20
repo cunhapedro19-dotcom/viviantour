@@ -18,6 +18,7 @@ interface HeaderUser {
 const NAV = [
   { href: "/buscar?tipo=stay", label: "Hospedagens" },
   { href: "/buscar?tipo=tour", label: "Passeios" },
+  { href: "/buscar?tipo=tour&categoria=bate-e-volta", label: "Bate e volta" },
   { href: "/buscar?tipo=tour&categoria=experiencia-nautica", label: "Experiências" },
   { href: "/anuncie", label: "Seja um parceiro" },
 ];

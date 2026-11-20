@@ -13,6 +13,7 @@ const QUICK_LINKS = [
   { label: "Prainhas do Pontal", href: "/buscar?q=pontal" },
   { label: "Passeio de escuna", href: "/buscar?categoria=escuna" },
   { label: "Mergulho", href: "/buscar?categoria=mergulho" },
+  { label: "Bate e volta", href: "/buscar?tipo=tour&categoria=bate-e-volta" },
   { label: "Pé na areia", href: "/buscar?categoria=flat-pe-na-areia" },
   { label: "Pôr do sol", href: "/buscar?q=p%C3%B4r+do+sol" },
 ];
@@ -305,6 +306,8 @@ function categoryIcon(icon?: string | null) {
       return "🧭";
     case "map":
       return "🗺️";
+    case "bus":
+      return "🚌";
     case "fish":
       return "🎣";
     case "waves":
