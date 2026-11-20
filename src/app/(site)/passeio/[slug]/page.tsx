@@ -9,6 +9,7 @@ import { ExtraMedia } from "@/components/site/ExtraMedia";
 import { StarRating } from "@/components/StarRating";
 import { tourToCard } from "@/lib/card";
 import { formatDuration } from "@/lib/format";
+import { DEFAULT_BATE_E_VOLTA_PRICE_NOTES } from "@/lib/tour-price";
 import { getDeparturesForTour, getReviewsFor, getTourBySlugSafe, searchListings } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
@@ -43,6 +44,11 @@ export default async function TourPage({ params }: Props) {
   const tour = await getTourBySlugSafe(params.slug);
   if (!tour || tour.status !== "published") notFound();
   const hasMaritimeConditionsNotice = MARITIME_TOUR_CATEGORIES.has(tour.categorySlug);
+  const priceNotes = tour.priceNotes?.length
+    ? tour.priceNotes
+    : tour.categorySlug === "bate-e-volta"
+    ? DEFAULT_BATE_E_VOLTA_PRICE_NOTES
+    : [];
 
   const [departures, reviews] = await Promise.all([
     getDeparturesForTour(tour),
@@ -181,6 +187,7 @@ export default async function TourPage({ params }: Props) {
             bookingAvailableThrough={tour.bookingAvailableThrough}
             priceMode={tour.priceMode}
             priceGroupSize={tour.priceGroupSize}
+            priceNotes={priceNotes}
           />
         </aside>
       </div>

@@ -109,6 +109,8 @@ export interface Tour {
   priceMode?: TourPriceMode;
   /** Pessoas inclu�das no valor fechado do grupo. */
   priceGroupSize?: number | null;
+  /** Taxas e condições apresentadas junto ao valor no pedido. */
+  priceNotes?: string[];
   /** Tarifa de sábado e domingo. Vazio = mesma tarifa de dias úteis. */
   weekendPriceCents?: number | null;
   /** Menor valor entre o preço base e as temporadas publicadas. */
@@ -275,6 +277,7 @@ export type NewTourInput = {
   pricePerPersonCents: number;
   priceMode: TourPriceMode;
   priceGroupSize?: number | null;
+  priceNotes: string[];
   maxGuests: number;
   minGuests: number;
   summary: string;

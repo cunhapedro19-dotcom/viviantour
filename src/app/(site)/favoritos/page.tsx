@@ -99,6 +99,7 @@ export default function FavoritosPage() {
               pricePerPersonCents: Number(serv.price_per_person_cents),
               priceMode: (serv.price_mode as "per_person" | "per_group") ?? "per_person",
               priceGroupSize: Number(serv.price_group_size ?? 0) || null,
+              priceNotes: (serv.price_notes as string[]) ?? [],
               childPriceCents: null,
               minGuests: Number(serv.min_guests ?? 1),
               maxGuests: Number(serv.max_guests ?? 10),

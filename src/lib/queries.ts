@@ -181,6 +181,7 @@ function mapTourRow(row: Row): Tour {
     pricePerPersonCents: row.price_per_person_cents,
     priceMode: row.price_mode ?? "per_person",
     priceGroupSize: row.price_group_size ?? null,
+    priceNotes: row.price_notes ?? [],
     weekendPriceCents: row.weekend_price_cents ?? null,
     startingPriceCents,
     priceRules,

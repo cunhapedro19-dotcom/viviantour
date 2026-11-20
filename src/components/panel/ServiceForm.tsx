@@ -5,6 +5,7 @@ import { Artwork } from "@/components/Artwork";
 import { CreationMediaPicker } from "@/components/panel/CreationMediaPicker";
 import type { MediaItem } from "@/lib/media-ops";
 import { demoStays, demoTours } from "@/lib/demo-data";
+import { DEFAULT_BATE_E_VOLTA_PRICE_NOTES } from "@/lib/tour-price";
 import type { NewTourInput, Tour } from "@/lib/types";
 
 export const TOUR_CATEGORIES = [
@@ -43,6 +44,7 @@ export function ServiceForm({
   const [price, setPrice] = useState(initial ? initial.pricePerPersonCents / 100 : 120);
   const [priceMode, setPriceMode] = useState<"per_person" | "per_group">(initial?.priceMode ?? "per_person");
   const [priceGroupSize, setPriceGroupSize] = useState(initial?.priceGroupSize ?? initial?.maxGuests ?? 2);
+  const [priceNotes, setPriceNotes] = useState<string[]>(initial?.priceNotes ?? (initial?.categorySlug === "bate-e-volta" ? DEFAULT_BATE_E_VOLTA_PRICE_NOTES : []));
   const [minGuests, setMinGuests] = useState(initial?.minGuests ?? 1);
   const [maxGuests, setMaxGuests] = useState(initial?.maxGuests ?? 20);
   const [summary, setSummary] = useState(initial?.summary ?? "");
@@ -80,6 +82,7 @@ export function ServiceForm({
       pricePerPersonCents: Math.round(price * 100),
       priceMode,
       priceGroupSize: priceMode === "per_group" ? priceGroupSize : null,
+      priceNotes,
       minGuests,
       maxGuests,
       summary: summary.trim(),
@@ -103,7 +106,7 @@ export function ServiceForm({
           </div>
           <div>
             <label className="label" htmlFor="t-cat">Tipo de passeio</label>
-            <select id="t-cat" className="input" value={category} onChange={(e) => setCategory(e.target.value)}>
+            <select id="t-cat" className="input" value={category} onChange={(e) => { const next = e.target.value; setCategory(next); if (next === "bate-e-volta" && priceNotes.length === 0) setPriceNotes(DEFAULT_BATE_E_VOLTA_PRICE_NOTES); }}>
               {TOUR_CATEGORIES.map((c) => (
                 <option key={c.slug} value={c.slug}>{c.label}</option>
               ))}
@@ -158,6 +161,11 @@ export function ServiceForm({
           <div>
             <label className="label" htmlFor="t-min">Mínimo de hóspedes</label>
             <input id="t-min" type="number" min={1} className="input" value={minGuests} onChange={(e) => setMinGuests(Number(e.target.value))} />
+          </div>
+          <div className="sm:col-span-3">
+            <label className="label" htmlFor="t-price-notes">Taxas e condições do preço</label>
+            <textarea id="t-price-notes" className="input min-h-[96px]" value={priceNotes.join("\n")} onChange={(e) => setPriceNotes(e.target.value.split("\n").map((line) => line.trim()).filter(Boolean))} placeholder="Uma informação por linha" />
+            <p className="mt-1 text-xs text-tinta-mute">Essas informações aparecem ao lado do preço e na mensagem enviada pelo WhatsApp.</p>
           </div>
           <div className="sm:col-span-2">
             <label className="label" htmlFor="t-meet">Local de embarque / encontro</label>
