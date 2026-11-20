@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ListingStatusBadge } from "@/components/StatusBadge";
 import { DEMO_MODE } from "@/lib/config";
-import { fetchAdminListings, setListingStatus } from "@/lib/admin-ops";
+import { deleteListing, fetchAdminListings, setListingStatus } from "@/lib/admin-ops";
 import type { AdminListingRow } from "@/lib/admin-ops";
 
 export default function AdminAnunciosPage() {
   const [listings, setListings] = useState<AdminListingRow[] | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -29,6 +30,25 @@ export default function AdminAnunciosPage() {
       }
     }
     setListings((list) => (list ?? []).map((l) => (l.id === listing.id ? { ...l, status } : l)));
+  }
+
+  async function remove(listing: AdminListingRow) {
+    const confirmed = window.confirm(
+      `Excluir definitivamente "${listing.name}"? Esta ação remove o anúncio, suas mídias e configurações. Não pode ser desfeita.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(listing.id);
+    if (!DEMO_MODE) {
+      const ok = await deleteListing(listing.kind, listing.id);
+      if (!ok) {
+        window.alert("Não foi possível excluir o anúncio. Se ele tiver uma reserva ativa, pause-o e tente novamente.");
+        setDeletingId(null);
+        return;
+      }
+    }
+    setListings((list) => (list ?? []).filter((item) => item.id !== listing.id));
+    setDeletingId(null);
   }
 
   return (
@@ -89,17 +109,20 @@ export default function AdminAnunciosPage() {
                           Calendário
                         </Link>
                       )}
-                      {(l.status === "pending_review" || l.status === "rejected" || l.status === "paused") && (
+                      {(l.status === "draft" || l.status === "pending_review" || l.status === "rejected" || l.status === "paused") && (
                         <button type="button" onClick={() => moderate(l, "published")} className="btn-turquesa btn-sm">
-                          {l.status === "pending_review" ? "Publicar" : "Reativar"}
+                          {l.status === "pending_review" || l.status === "draft" ? "Publicar" : "Ativar"}
                         </button>
                       )}
                       {l.status === "pending_review" && (
                         <button type="button" onClick={() => moderate(l, "rejected")} className="btn-danger btn-sm">Recusar</button>
                       )}
                       {l.status === "published" && (
-                        <button type="button" onClick={() => moderate(l, "paused")} className="btn-outline btn-sm">Pausar</button>
+                        <button type="button" onClick={() => moderate(l, "paused")} className="btn-outline btn-sm">Desativar</button>
                       )}
+                      <button type="button" disabled={deletingId === l.id} onClick={() => remove(l)} className="btn-danger btn-sm">
+                        {deletingId === l.id ? "Excluindo..." : "Excluir"}
+                      </button>
                     </div>
                   </td>
                 </tr>

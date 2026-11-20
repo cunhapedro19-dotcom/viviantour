@@ -236,6 +236,15 @@ export async function setListingStatus(
   return !error;
 }
 
+/** Exclusão definitiva, disponível somente para administradores pelas policies do banco. */
+export async function deleteListing(kind: "stay" | "tour", id: string): Promise<boolean> {
+  if (DEMO_MODE) return true;
+  const sb = getSupabaseBrowserClient();
+  const table = kind === "stay" ? "properties" : "services";
+  const { error } = await sb.from(table).delete().eq("id", id);
+  return !error;
+}
+
 export async function fetchAdminBookings(): Promise<Booking[]> {
   if (DEMO_MODE) {
     return listBookings();
