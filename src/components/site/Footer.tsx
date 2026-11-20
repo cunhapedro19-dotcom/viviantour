@@ -17,6 +17,7 @@ export function Footer() {
           <ul className="space-y-2 text-sm text-tinta-soft">
             <li><Link href="/buscar?tipo=stay" className="hover:text-oceano-600">Hospedagens</Link></li>
             <li><Link href="/buscar?tipo=tour" className="hover:text-oceano-600">Passeios de barco</Link></li>
+            <li><Link href="/combos" className="hover:text-oceano-600">Combos especiais</Link></li>
             <li><Link href="/buscar?tipo=tour&categoria=mergulho" className="hover:text-oceano-600">Mergulho</Link></li>
             <li><Link href="/buscar?tipo=tour&categoria=bate-e-volta" className="hover:text-oceano-600">Bate e volta</Link></li>
             <li><Link href="/buscar?tipo=tour&categoria=experiencia-nautica" className="hover:text-oceano-600">Experiências náuticas</Link></li>
