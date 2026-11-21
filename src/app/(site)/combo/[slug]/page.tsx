@@ -1,11 +1,60 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ComboPriceSelector, type ComboPriceOption } from "@/components/booking/ComboPriceSelector";
+import { SITE } from "@/lib/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type ItineraryStop = { title?: string; description?: string };
+type Props = { params: { slug: string } };
 
-export default async function ComboPage({ params }: { params: { slug: string } }) {
+export const dynamic = "force-dynamic";
+
+function absoluteUrl(url?: string | null) {
+  try {
+    return new URL(url || "/img/og.png", SITE.url).toString();
+  } catch {
+    return new URL("/img/og.png", SITE.url).toString();
+  }
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const sb = createSupabaseServerClient();
+  const { data: combo } = await sb
+    .from("combos")
+    .select("name,summary,cover_url")
+    .eq("slug", params.slug)
+    .eq("status", "published")
+    .maybeSingle();
+
+  if (!combo) return { title: "Combo" };
+
+  const description = combo.summary || `Combo especial em ${SITE.city}.`;
+  const imageUrl = absoluteUrl(combo.cover_url);
+  const pageUrl = absoluteUrl(`/combo/${params.slug}`);
+
+  return {
+    title: combo.name,
+    description,
+    alternates: { canonical: pageUrl },
+    openGraph: {
+      type: "website",
+      locale: "pt_BR",
+      url: pageUrl,
+      title: combo.name,
+      description,
+      images: [{ url: imageUrl, alt: `Imagem do ${combo.name}` }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: combo.name,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
+
+export default async function ComboPage({ params }: Props) {
   const sb = createSupabaseServerClient();
   const { data: combo } = await sb
     .from("combos")

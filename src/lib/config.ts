@@ -9,12 +9,24 @@ export const DEFAULT_WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER |
 export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 export const DEMO_MODE = !isSupabaseConfigured;
 
+function publicSiteUrl() {
+  const url =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ||
+    process.env.VERCEL_URL ||
+    "http://localhost:3000";
+
+  return url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`;
+}
+
 export const SITE = {
   name: "Viviantourr",
   tagline: "Hospedagens, passeios e experiências em Arraial do Cabo",
   city: "Arraial do Cabo",
   state: "RJ",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+  // NEXT_PUBLIC_SITE_URL deve apontar para o domínio canônico em produção.
+  // Os fallbacks permitem que metadata gerada no Vercel continue absoluta.
+  url: publicSiteUrl(),
   supportEmail: "contato@viviantourr.com.br",
 } as const;
 
