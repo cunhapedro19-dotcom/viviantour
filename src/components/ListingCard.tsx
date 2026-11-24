@@ -82,6 +82,11 @@ export function ListingCard({ data }: { data: CardData }) {
         <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-oceano-700 shadow-sm">
           {data.label}
         </span>
+        {data.beachfront && (
+          <span className="absolute bottom-3 left-3 rounded-full bg-turquesa-500 px-3 py-1 text-xs font-semibold text-white shadow-sm">
+            Pé na areia
+          </span>
+        )}
         <button
           type="button"
           onClick={onToggle}

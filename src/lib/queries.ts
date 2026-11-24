@@ -21,6 +21,25 @@ export interface SearchFilters {
   categoria?: string;
   pessoas?: number;
   ordem?: "relevancia" | "avaliacao";
+  regiao?: string;
+  beachfront?: boolean;
+}
+
+export type StayRegion = { key: string; label: string };
+
+/** Normaliza somente grafia (caixa, espaços e acentos); não une regiões diferentes. */
+export function normalizeRegion(value: string): string {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().replace(/\s+/g, " ").toLocaleLowerCase("pt-BR");
+}
+
+export function getStayRegions(stays: Stay[]): StayRegion[] {
+  const regions = new Map<string, string>();
+  stays.forEach((stay) => {
+    const label = stay.neighborhood.trim().replace(/\s+/g, " ");
+    const key = normalizeRegion(label);
+    if (key && !regions.has(key)) regions.set(key, label);
+  });
+  return [...regions].map(([key, label]) => ({ key, label })).sort((a, b) => a.label.localeCompare(b.label, "pt-BR"));
 }
 
 interface PhotoRow { url: string; sort?: number; type?: string }
@@ -56,6 +75,8 @@ function filterStays(stays: Stay[], f: SearchFilters): Stay[] {
     if (f.tipo && f.tipo !== "stay") return false;
     if (f.categoria && s.categorySlug !== f.categoria) return false;
     if (f.pessoas && s.capacity < f.pessoas) return false;
+    if (f.regiao && normalizeRegion(s.neighborhood) !== f.regiao) return false;
+    if (f.beachfront && !s.beachfront) return false;
     return textMatches(s, f.q);
   });
 }
@@ -66,6 +87,7 @@ function filterTours(tours: Tour[], f: SearchFilters): Tour[] {
     if (f.tipo && f.tipo !== "tour") return false;
     if (f.categoria && t.categorySlug !== f.categoria) return false;
     if (f.pessoas && t.maxGuests < f.pessoas) return false;
+    if (f.regiao || f.beachfront) return false;
     return textMatches(t, f.q);
   });
 }
@@ -88,7 +110,7 @@ function sortListings<T extends Stay | Tour>(items: T[], ordem?: SearchFilters["
 function demoHomeData() {
   const stays = sortListings(demoStays.filter((s) => s.featured));
   const tours = sortListings(demoTours.filter((t) => t.featured));
-  return { stays, tours, categories: demoCategories };
+  return { stays, tours, categories: demoCategories, regions: getStayRegions(demoStays.filter((s) => s.status === "published")) };
 }
 
 function demoSearch(f: SearchFilters) {
@@ -128,6 +150,7 @@ function mapStayRow(row: Row): Stay {
     orgSlug: row.organization?.slug ?? "",
     orgWhatsapp: row.organization?.whatsapp ?? row.organization?.phone ?? null,
     neighborhood: row.neighborhood ?? "",
+    beachfront: Boolean(row.beachfront),
     city: row.city ?? "Arraial do Cabo",
     state: row.state ?? "RJ",
     capacity: row.capacity,
@@ -204,15 +227,17 @@ const TOUR_SELECT = "*, organization:organizations(id,name,slug,phone,whatsapp),
 
 async function supabaseHomeData() {
   const supabase = createSupabaseServerClient();
-  const [staysRes, toursRes, catsRes] = await Promise.all([
+  const [staysRes, toursRes, catsRes, regionsRes] = await Promise.all([
     supabase.from("properties").select(STAY_SELECT).eq("status", "published").order("rating_avg", { ascending: false }).limit(8),
     supabase.from("services").select(TOUR_SELECT).eq("status", "published").order("rating_avg", { ascending: false }).limit(8),
     supabase.from("categories").select("*").eq("active", true).order("sort"),
+    supabase.from("properties").select("neighborhood").eq("status", "published"),
   ]);
   return {
     stays: (staysRes.data ?? []).map(mapStayRow) as Stay[],
     tours: (toursRes.data ?? []).map(mapTourRow) as Tour[],
     categories: (catsRes.data ?? []) as Category[],
+    regions: getStayRegions((regionsRes.data ?? []).map((row: Row) => ({ neighborhood: row.neighborhood ?? "", status: "published" } as Stay))),
   };
 }
 

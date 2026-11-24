@@ -14,6 +14,7 @@ export interface CardData {
   images: string[];
   priceCaption?: string;
   featured?: boolean;
+  beachfront?: boolean;
 }
 
 export function stayToCard(s: Stay): CardData {
@@ -28,6 +29,7 @@ export function stayToCard(s: Stay): CardData {
     reviewsCount: s.reviewsCount,
     images: s.images,
     featured: s.featured,
+    beachfront: Boolean(s.beachfront),
   };
 }
 

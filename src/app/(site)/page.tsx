@@ -14,12 +14,12 @@ const QUICK_LINKS = [
   { label: "Passeio de escuna", href: "/buscar?categoria=escuna" },
   { label: "Mergulho", href: "/buscar?categoria=mergulho" },
   { label: "Bate e volta", href: "/buscar?tipo=tour&categoria=bate-e-volta" },
-  { label: "Pé na areia", href: "/buscar?categoria=flat-pe-na-areia" },
+  { label: "Pé na areia", href: "/buscar?tipo=stay&beachfront=true" },
   { label: "Pôr do sol", href: "/buscar?q=p%C3%B4r+do+sol" },
 ];
 
 export default async function HomePage() {
-  const { stays, tours, categories } = await getHomeData();
+  const { stays, tours, categories, regions } = await getHomeData();
 
   const stayCards = stays.slice(0, 4).map(stayToCard);
   // A ordem da consulta não define o tipo do serviço. Separar pelo formato evita
@@ -109,6 +109,16 @@ export default async function HomePage() {
           </>
         )}
       </section>
+
+      {regions.length > 0 && (
+        <section className="container-x py-10">
+          <p className="kicker">Escolha sua localização</p>
+          <h2 className="section-title mb-5">Hospedagens por região</h2>
+          <div className="flex flex-wrap gap-3">
+            {regions.map((region) => <Link key={region.key} href={`/buscar?tipo=stay&regiao=${encodeURIComponent(region.key)}`} className="btn-outline">{region.label}</Link>)}
+          </div>
+        </section>
+      )}
 
       {/* PASSEIOS DE BARCO */}
       <section className="bg-white py-14">

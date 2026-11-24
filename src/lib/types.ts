@@ -64,6 +64,8 @@ export interface Stay {
   orgSlug: string;
   orgWhatsapp?: string | null;
   neighborhood: string;
+  /** Acesso direto à praia, definido manualmente no painel. */
+  beachfront?: boolean;
   city: string;
   state: string;
   capacity: number;
@@ -254,6 +256,7 @@ export type NewStayInput = {
   categoryId: string;
   categoryLabel: string;
   neighborhood: string;
+  beachfront: boolean;
   capacity: number;
   bedrooms: number;
   bathrooms: number;

@@ -48,6 +48,7 @@ export function PropertyForm({
   const [name, setName] = useState(initial?.name ?? "");
   const [category, setCategory] = useState(initial?.categorySlug ?? STAY_CATEGORIES[0].slug);
   const [neighborhood, setNeighborhood] = useState(initial?.neighborhood ?? "");
+  const [beachfront, setBeachfront] = useState(Boolean(initial?.beachfront));
   const [capacity, setCapacity] = useState(initial?.capacity ?? 4);
   const [bedrooms, setBedrooms] = useState(initial?.bedrooms ?? 2);
   const [bathrooms, setBathrooms] = useState(initial?.bathrooms ?? 1);
@@ -81,6 +82,7 @@ export function PropertyForm({
       categoryId: category,
       categoryLabel: STAY_CATEGORIES.find((c) => c.slug === category)?.label ?? "Hospedagem",
       neighborhood: neighborhood.trim(),
+      beachfront,
       capacity,
       bedrooms,
       bathrooms,
@@ -117,6 +119,10 @@ export function PropertyForm({
             <label className="label" htmlFor="p-hood">Bairro / região</label>
             <input id="p-hood" className="input" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Ex.: Ponta do Atalaia" />
           </div>
+          <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-areia-200 px-4 py-3 text-sm text-tinta-soft sm:col-span-2">
+            <span><strong className="block text-tinta">Pé na areia</strong><span className="text-xs text-tinta-mute">Ative somente para imóvel com acesso direto à praia.</span></span>
+            <input type="checkbox" className="h-5 w-5 accent-turquesa-500" checked={beachfront} onChange={(e) => setBeachfront(e.target.checked)} />
+          </label>
           <div className="sm:col-span-2">
             <label className="label" htmlFor="p-summary">Resumo (aparece nos cartões)</label>
             <input id="p-summary" className="input" value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="Uma frase que vende o imóvel." />

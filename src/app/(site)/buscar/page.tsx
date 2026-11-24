@@ -28,9 +28,11 @@ export default async function BuscarPage({ searchParams }: Props) {
     categoria: sp(searchParams, "categoria"),
     pessoas: sp(searchParams, "pessoas") ? Number(sp(searchParams, "pessoas")) : undefined,
     ordem: (sp(searchParams, "ordem") as SearchFilters["ordem"]) ?? "relevancia",
+    regiao: sp(searchParams, "regiao"),
+    beachfront: sp(searchParams, "beachfront") === "true",
   };
 
-  const [result, { categories }] = await Promise.all([searchListings(filters), getHomeData()]);
+  const [result, { categories, regions }] = await Promise.all([searchListings(filters), getHomeData()]);
 
   const showStays = !filters.tipo || filters.tipo === "stay";
   const showTours = !filters.tipo || filters.tipo === "tour";
@@ -48,7 +50,7 @@ export default async function BuscarPage({ searchParams }: Props) {
       </header>
 
       <Suspense fallback={<div className="card h-40 animate-pulse" />}>
-        <FilterPanel categories={categories} />
+        <FilterPanel categories={categories} regions={regions} />
       </Suspense>
 
       {result.total === 0 ? (

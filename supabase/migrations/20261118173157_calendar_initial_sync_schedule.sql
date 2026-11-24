@@ -1,0 +1,1 @@
+alter table public.external_calendars alter column next_sync_at set default (date_bin(interval '1 day', now() - interval '9 hours', timestamptz '2000-01-01') + interval '1 day 9 hours'); update public.external_calendars set next_sync_at = date_bin(interval '1 day', now() - interval '9 hours', timestamptz '2000-01-01') + interval '1 day 9 hours' where last_status is null;;

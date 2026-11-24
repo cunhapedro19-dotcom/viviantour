@@ -3,8 +3,9 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import type { Category } from "@/lib/types";
+import type { StayRegion } from "@/lib/queries";
 
-export function FilterPanel({ categories }: { categories: Category[] }) {
+export function FilterPanel({ categories, regions }: { categories: Category[]; regions: StayRegion[] }) {
   const router = useRouter();
   const params = useSearchParams();
   const [q, setQ] = useState(params.get("q") ?? "");
@@ -13,6 +14,8 @@ export function FilterPanel({ categories }: { categories: Category[] }) {
   const categoria = params.get("categoria") ?? "";
   const pessoas = params.get("pessoas") ?? "";
   const ordem = params.get("ordem") ?? "relevancia";
+  const regiao = params.get("regiao") ?? "";
+  const beachfront = params.get("beachfront") === "true";
 
   const relevantCategories = categories.filter((c) => (tipo ? c.kind === tipo : true));
 
@@ -116,7 +119,19 @@ export function FilterPanel({ categories }: { categories: Category[] }) {
             ))}
           </select>
         </div>
+        <div>
+          <label className="label" htmlFor="f-region">Bairro / região</label>
+          <select id="f-region" className="input" value={regiao} onChange={(e) => apply({ regiao: e.target.value, tipo: e.target.value ? "stay" : tipo })}>
+            <option value="">Todas</option>
+            {regions.map((region) => <option key={region.key} value={region.key}>{region.label}</option>)}
+          </select>
+        </div>
       </div>
+
+      <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-tinta-soft">
+        <input type="checkbox" className="h-4 w-4 accent-turquesa-500" checked={beachfront} onChange={(e) => apply({ beachfront: e.target.checked ? "true" : "", tipo: e.target.checked ? "stay" : tipo })} />
+        Somente pé na areia
+      </label>
 
       <div className="flex justify-end">
         <button type="button" onClick={clearAll} className="btn-ghost btn-sm">
