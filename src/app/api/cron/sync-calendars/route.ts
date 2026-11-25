@@ -9,8 +9,7 @@ export const maxDuration = 60;
  * CRON — sincronização de calendários externos (iCal) + conclusão de reservas.
  *
  * Agende uma chamada periódica (ex.: de 15 em 15 minutos):
- *  · Vercel Cron (ver vercel.json / crons no dashboard) ou
- *  · Supabase pg_cron chamando esta URL, ou
+ *  · Supabase pg_cron + pg_net (recomendado) ou
  *  · qualquer agendador externo:
  *      GET /api/cron/sync-calendars
  *      Authorization: Bearer <CRON_SECRET>

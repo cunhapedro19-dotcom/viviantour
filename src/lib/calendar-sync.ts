@@ -4,9 +4,8 @@ import { fetchCalendar } from "./calendar-fetch";
 import { parseICS } from "./ical";
 
 function nextSyncTime() {
-  const next = new Date();
-  next.setUTCHours(9, 0, 0, 0);
-  if (next.getTime() <= Date.now()) next.setUTCDate(next.getUTCDate() + 1);
+  const interval = 15 * 60 * 1000;
+  const next = new Date(Math.floor(Date.now() / interval) * interval + interval);
   return next.toISOString();
 }
 
