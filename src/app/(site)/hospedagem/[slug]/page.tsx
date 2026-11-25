@@ -54,6 +54,7 @@ export default async function StayPage({ params }: Props) {
 
   let blockedDates: string[] = [];
   let availabilityError = false;
+  let availabilityUnconfirmed = false;
   let availableThrough: string | undefined;
   if (DEMO_MODE) {
     blockedDates = expandBlocks(getDemoBlocks(stay.id));
@@ -68,6 +69,10 @@ export default async function StayPage({ params }: Props) {
       p_to: to.toISOString().slice(0, 10),
     });
     availabilityError = Boolean(error);
+    if (!availabilityError) {
+      const { data: hasCalendar, error: calendarStateError } = await supabase.rpc("has_active_property_calendar", { p_property: stay.id });
+      availabilityUnconfirmed = Boolean(calendarStateError) || hasCalendar !== true;
+    }
     blockedDates = (data ?? [])
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .filter((r: any) => !r.available)
@@ -187,6 +192,7 @@ export default async function StayPage({ params }: Props) {
             phone={stay.orgWhatsapp}
             blockedDates={blockedDates}
             availabilityError={availabilityError}
+            availabilityUnconfirmed={availabilityUnconfirmed}
             maxDate={availableThrough}
             minNights={stay.minNights}
             capacity={stay.capacity}
