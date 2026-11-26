@@ -63,16 +63,17 @@ export default async function HomePage() {
 
       {/* CATEGORIAS */}
       {categories.length > 0 && (
-        <section className="container-x py-12">
-          <h2 className="section-title mb-6">Explore por categoria</h2>
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-            {stayCategories.map((c) => (
-              <CategoryTile key={c.id} slug={c.slug} label={c.label} icon={c.icon} kind="stay" />
-            ))}
-          </div>
-          <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
-            {tourCategories.map((c) => (
-              <CategoryTile key={c.id} slug={c.slug} label={c.label} icon={c.icon} kind="tour" />
+        <section className="container-x py-7 sm:py-8">
+          <h2 className="section-title mb-4 text-2xl sm:text-3xl">Explore por categoria</h2>
+          <div className="flex flex-wrap gap-2.5">
+            {[...stayCategories, ...tourCategories].map((c) => (
+              <CategoryTile
+                key={`${c.kind}-${c.id}`}
+                slug={c.slug}
+                label={c.label}
+                icon={c.icon}
+                kind={c.kind}
+              />
             ))}
           </div>
         </section>
@@ -296,9 +297,9 @@ function CategoryTile({
   return (
     <Link
       href={`/buscar?tipo=${kind}&categoria=${slug}`}
-      className="group flex flex-col items-center gap-2 rounded-2xl border border-areia-200 bg-white p-3 text-center shadow-card transition hover:-translate-y-0.5 hover:border-turquesa-300 hover:shadow-pop"
+      className="group inline-flex items-center gap-2 rounded-full border border-areia-200 bg-white px-3 py-2 text-center shadow-card transition hover:-translate-y-0.5 hover:border-turquesa-300 hover:shadow-pop sm:px-3.5"
     >
-      <span className="grid h-10 w-10 place-items-center rounded-full bg-oceano-50 text-lg transition group-hover:bg-turquesa-50">
+      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-oceano-50 text-sm transition group-hover:bg-turquesa-50">
         {categoryIcon(icon)}
       </span>
       <span className="text-xs font-semibold leading-tight text-tinta-soft group-hover:text-oceano-700">{label}</span>
