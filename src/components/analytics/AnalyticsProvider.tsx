@@ -9,6 +9,15 @@ export function AnalyticsProvider() {
   const [ready, setReady] = useState(false);
   const pathname = usePathname();
   useEffect(() => setConsent(window.localStorage.getItem(CONSENT_KEY)), []);
+  useEffect(() => {
+    if (consent !== "granted" || !GA_MEASUREMENT_ID) return;
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || ((...args) => window.dataLayer?.push(args));
+    window.gtag("js", new Date());
+    window.gtag("consent", "default", { analytics_storage: "denied", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied", wait_for_update: 500 });
+    window.gtag("consent", "update", { analytics_storage: "granted", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" });
+    window.gtag("config", GA_MEASUREMENT_ID, { anonymize_ip: true, send_page_view: false });
+  }, [consent]);
   useEffect(() => { if (consent && window.gtag) window.gtag("consent", "update", { analytics_storage: consent === "granted" ? "granted" : "denied", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" }); }, [consent]);
   useEffect(() => {
     if (consent !== "granted" || !ready || !pathname) return;
