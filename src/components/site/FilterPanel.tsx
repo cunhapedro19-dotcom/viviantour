@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import type { Category } from "@/lib/types";
 import type { StayRegion } from "@/lib/queries";
+import { trackEvent } from "@/lib/analytics";
 
 export function FilterPanel({ categories, regions }: { categories: Category[]; regions: StayRegion[] }) {
   const router = useRouter();
@@ -121,7 +122,7 @@ export function FilterPanel({ categories, regions }: { categories: Category[]; r
         </div>
         <div>
           <label className="label" htmlFor="f-region">Bairro / região</label>
-          <select id="f-region" className="input" value={regiao} onChange={(e) => apply({ regiao: e.target.value, tipo: e.target.value ? "stay" : tipo })}>
+          <select id="f-region" className="input" value={regiao} onChange={(e) => { trackEvent("filter_region", { region: e.target.value || "all", category: "stay" }); apply({ regiao: e.target.value, tipo: e.target.value ? "stay" : tipo }); }}>
             <option value="">Todas</option>
             {regions.map((region) => <option key={region.key} value={region.key}>{region.label}</option>)}
           </select>
