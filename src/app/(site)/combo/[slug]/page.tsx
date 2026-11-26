@@ -3,20 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ComboPriceSelector, type ComboPriceOption } from "@/components/booking/ComboPriceSelector";
 import { SITE } from "@/lib/config";
+import { officialImage, officialPage } from "@/lib/seo";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type ItineraryStop = { title?: string; description?: string };
 type Props = { params: { slug: string } };
 
 export const dynamic = "force-dynamic";
-
-function absoluteUrl(url?: string | null) {
-  try {
-    return new URL(url || "/img/og.png", SITE.url).toString();
-  } catch {
-    return new URL("/img/og.png", SITE.url).toString();
-  }
-}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const sb = createSupabaseServerClient();
@@ -30,8 +23,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!combo) return { title: "Combo" };
 
   const description = combo.summary || `Combo especial em ${SITE.city}.`;
-  const imageUrl = absoluteUrl(combo.cover_url);
-  const pageUrl = absoluteUrl(`/combo/${params.slug}`);
+  const imageUrl = officialImage(combo.cover_url);
+  const pageUrl = officialPage(`/combo/${params.slug}`);
 
   return {
     title: combo.name,

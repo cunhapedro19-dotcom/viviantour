@@ -11,6 +11,7 @@ import { tourToCard } from "@/lib/card";
 import { formatDuration } from "@/lib/format";
 import { DEFAULT_BATE_E_VOLTA_PRICE_NOTES } from "@/lib/tour-price";
 import { getDeparturesForTour, getReviewsFor, getTourBySlugSafe, searchListings } from "@/lib/queries";
+import { officialImage, officialPage } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -30,13 +31,14 @@ const MARITIME_TOUR_CATEGORIES = new Set([
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const tour = await getTourBySlugSafe(params.slug);
   if (!tour) return { title: "Passeio" };
-  const image = tour.images[0];
-  const imageUrl = image?.startsWith("http") || image?.startsWith("/") ? image : image ? `/img/${image}.jpg` : "/img/og.png";
+  const imageUrl = officialImage(tour.images[0]);
+  const description = tour.summary || `${tour.categoryLabel} em Arraial do Cabo.`;
+  const pageUrl = officialPage(`/passeio/${params.slug}`);
   return {
     title: tour.name,
-    description: tour.summary || `${tour.categoryLabel} em Arraial do Cabo.`,
-    openGraph: { type: "website", locale: "pt_BR", title: tour.name, description: tour.summary, images: [{ url: imageUrl, alt: tour.name }] },
-    twitter: { card: "summary_large_image", title: tour.name, description: tour.summary, images: [imageUrl] },
+    description, alternates: { canonical: pageUrl },
+    openGraph: { type: "website", locale: "pt_BR", url: pageUrl, title: tour.name, description, images: [{ url: imageUrl, alt: tour.name }] },
+    twitter: { card: "summary_large_image", title: tour.name, description, images: [imageUrl] },
   };
 }
 

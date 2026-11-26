@@ -13,6 +13,7 @@ import { getDemoBlocks } from "@/lib/demo-data";
 import { stayToCard } from "@/lib/card";
 import { getReviewsFor, getStayBySlugSafe, searchListings } from "@/lib/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { officialImage, officialPage } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -23,13 +24,14 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const stay = await getStayBySlugSafe(params.slug);
   if (!stay) return { title: "Hospedagem" };
-  const image = stay.images[0];
-  const imageUrl = image?.startsWith("http") || image?.startsWith("/") ? image : image ? `/img/${image}.jpg` : "/img/og.png";
+  const imageUrl = officialImage(stay.images[0]);
+  const description = [stay.summary || `${stay.categoryLabel} em ${stay.neighborhood}, ${stay.city}.`, stay.neighborhood && `Localização: ${stay.neighborhood}.`].filter(Boolean).join(" ");
+  const pageUrl = officialPage(`/hospedagem/${params.slug}`);
   return {
     title: stay.name,
-    description: stay.summary || `${stay.categoryLabel} em ${stay.neighborhood}, ${stay.city}.`,
-    openGraph: { type: "website", locale: "pt_BR", title: stay.name, description: stay.summary, images: [{ url: imageUrl, alt: stay.name }] },
-    twitter: { card: "summary_large_image", title: stay.name, description: stay.summary, images: [imageUrl] },
+    description, alternates: { canonical: pageUrl },
+    openGraph: { type: "website", locale: "pt_BR", url: pageUrl, title: stay.name, description, images: [{ url: imageUrl, alt: stay.name }] },
+    twitter: { card: "summary_large_image", title: stay.name, description, images: [imageUrl] },
   };
 }
 
