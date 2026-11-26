@@ -6,20 +6,21 @@ import { GA_MEASUREMENT_ID } from "@/lib/analytics";
 const CONSENT_KEY = "vivian.analytics.consent";
 export function AnalyticsProvider() {
   const [consent, setConsent] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
   const pathname = usePathname();
   useEffect(() => setConsent(window.localStorage.getItem(CONSENT_KEY)), []);
   useEffect(() => { if (consent && window.gtag) window.gtag("consent", "update", { analytics_storage: consent === "granted" ? "granted" : "denied", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" }); }, [consent]);
   useEffect(() => {
-    if (consent !== "granted" || !pathname) return;
+    if (consent !== "granted" || !ready || !pathname) return;
     const event = pathname.startsWith("/hospedagem/") ? "view_property" : pathname.startsWith("/passeio/") ? "view_tour" : pathname.startsWith("/combo/") ? "view_combo" : null;
     if (event) window.setTimeout(() => window.gtag?.("event", event, { page_path: pathname }), 0);
     const onClick = (e: MouseEvent) => { const target = e.target as HTMLElement; const link = target.closest<HTMLAnchorElement>("a[href^='https://wa.me/']"); if (link) window.gtag?.("event", "whatsapp_click", { link_origin: pathname }); };
     const onChange = (e: Event) => { const target = e.target as HTMLInputElement; if (target.type === "date") window.gtag?.("event", "select_dates", { page_path: pathname }); };
     document.addEventListener("click", onClick); document.addEventListener("change", onChange);
     return () => { document.removeEventListener("click", onClick); document.removeEventListener("change", onChange); };
-  }, [consent, pathname]);
+  }, [consent, ready, pathname]);
   if (!GA_MEASUREMENT_ID || consent !== "granted") return null;
-  return <Script id="vivian-ga4" strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} onLoad={() => { window.dataLayer = window.dataLayer || []; window.gtag = (...args) => window.dataLayer?.push(args); window.gtag("js", new Date()); window.gtag("config", GA_MEASUREMENT_ID, { anonymize_ip: true, send_page_view: true }); }} />;
+  return <Script id="vivian-ga4" strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} onLoad={() => { window.dataLayer = window.dataLayer || []; window.gtag = (...args) => window.dataLayer?.push(args); window.gtag("js", new Date()); window.gtag("consent", "default", { analytics_storage: "denied", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied", wait_for_update: 500 }); window.gtag("consent", "update", { analytics_storage: "granted", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" }); window.gtag("config", GA_MEASUREMENT_ID, { anonymize_ip: true, send_page_view: false }); setReady(true); }} />;
 }
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
