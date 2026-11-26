@@ -27,6 +27,12 @@ export interface SearchFilters {
 
 export type StayRegion = { key: string; label: string };
 
+export type StayRegionGroup = {
+  key: string;
+  label: string;
+  stays: Stay[];
+};
+
 /** Normaliza somente grafia (caixa, espaços e acentos); não une regiões diferentes. */
 export function normalizeRegion(value: string): string {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().replace(/\s+/g, " ").toLocaleLowerCase("pt-BR");
@@ -40,6 +46,30 @@ export function getStayRegions(stays: Stay[]): StayRegion[] {
     if (key && !regions.has(key)) regions.set(key, label);
   });
   return [...regions].map(([key, label]) => ({ key, label })).sort((a, b) => a.label.localeCompare(b.label, "pt-BR"));
+}
+
+/** Agrupa somente por grafia normalizada; regiões geograficamente distintas não são inferidas. */
+export function groupStaysByRegion(stays: Stay[]): StayRegionGroup[] {
+  const groups = new Map<string, StayRegionGroup>();
+  stays.forEach((stay) => {
+    const label = stay.neighborhood.trim().replace(/\s+/g, " ");
+    const key = normalizeRegion(label) || "outras-localizacoes";
+    const group = groups.get(key);
+    if (group) {
+      group.stays.push(stay);
+      return;
+    }
+    groups.set(key, {
+      key,
+      label: label || "Outras localizações",
+      stays: [stay],
+    });
+  });
+  return [...groups.values()].sort((a, b) => {
+    if (a.key === "outras-localizacoes") return 1;
+    if (b.key === "outras-localizacoes") return -1;
+    return a.label.localeCompare(b.label, "pt-BR");
+  });
 }
 
 interface PhotoRow { url: string; sort?: number; type?: string }

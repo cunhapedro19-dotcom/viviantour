@@ -353,11 +353,12 @@ function IcalTab({ propertyId }: { propertyId: string }) {
               </p>
               <p className="text-xs text-tinta-mute">{c.label || c.source}</p>
               <p role="status" className="text-xs text-tinta-mute">
-                {syncing.includes(c.id) || c.lastStatus === "syncing" ? "Sincronizando…" : c.lastStatus === "ok" ? "Sincronizado" : c.lastStatus === "error" ? "Erro" : "Aguardando sincronização"}
+                {syncing.includes(c.id) || c.lastStatus === "syncing" ? "Sincronizando…" : c.lastStatus === "pending_removal" ? "Alteração aguardando confirmação" : c.lastStatus === "ok" ? "Sincronizado" : c.lastStatus === "error" ? "Erro" : "Aguardando sincronização"}
               </p>
-              {c.lastSyncedAt && <p className="text-xs text-tinta-mute">Última sincronização bem-sucedida: {new Date(c.lastSyncedAt).toLocaleString("pt-BR")}</p>}
+              {c.lastSyncedAt && <p className="text-xs text-tinta-mute">Última leitura do calendário: {new Date(c.lastSyncedAt).toLocaleString("pt-BR")}</p>}
               <p className="text-xs text-tinta-mute">Próxima sincronização: {c.nextSyncAt ? new Date(c.nextSyncAt).toLocaleString("pt-BR") : "na próxima execução automática"} (previsão)</p>
-              {c.lastSyncedAt && <p className="text-xs text-tinta-mute">{c.importedCount ?? 0} períodos ocupados importados ou atualizados.</p>}
+              {c.lastSyncedAt && <p className="text-xs text-tinta-mute">{c.importedCount ?? 0} períodos ocupados mantidos no calendário.</p>}
+              {c.lastStatus === "pending_removal" && <p role="status" className="text-xs text-amber-700">Os bloqueios anteriores foram mantidos até outra leitura igual do calendário.</p>}
               {c.lastStatus === "error" && <p role="alert" className="text-xs text-red-700">{c.lastError}</p>}
             </div>
             <div className="flex shrink-0 flex-col gap-2">

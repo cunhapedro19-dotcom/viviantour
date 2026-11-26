@@ -37,6 +37,12 @@ export default function SobrePage() {
           desenhada para crescer: amanhã, o mesmo sistema pode servir a outras regiões.
         </p>
 
+        <section className="mt-8 rounded-2xl border border-areia-200 bg-areia-50 p-5" aria-labelledby="privacidade-analytics">
+          <h2 id="privacidade-analytics" className="font-semibold text-tinta">Privacidade e cookies analíticos</h2>
+          <p className="mt-2 text-sm leading-relaxed text-tinta-soft">O site pode usar o Google Analytics 4 somente após sua escolha. A medição serve para compreender visitas, filtros, visualização de anúncios, seleção de datas e cliques de consulta. Não enviamos números de telefone, mensagens do WhatsApp, datas específicas, nomes ou outros dados pessoais ao Google Analytics. Você pode recusar ou alterar essa preferência a qualquer momento no botão “Preferências de cookies”. Publicidade e remarketing permanecem desativados.</p>
+          <a className="mt-2 inline-block text-sm font-semibold text-oceano-700 underline" href="https://policies.google.com/privacy/partners?hl=pt-BR" target="_blank" rel="noreferrer">Como o Google usa dados de sites que utilizam seus serviços</a>
+        </section>
+
         <div className="my-10 grid gap-5 sm:grid-cols-3">
           {[
             { n: "1", t: "Marketplace", d: "Viajantes pesquisam, comparam e solicitam reservas com informações claras e avaliações reais." },

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Manrope } from "next/font/google";
-import { SITE } from "@/lib/config";
+import { OFFICIAL_SITE_URL, SITE } from "@/lib/config";
 import "./globals.css";
 
 const display = Fraunces({
@@ -16,7 +16,8 @@ const sans = Manrope({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE.url),
+  metadataBase: new URL(OFFICIAL_SITE_URL),
+  alternates: { canonical: "/" },
   title: {
     default: `${SITE.name} — ${SITE.tagline}`,
     template: `%s · ${SITE.name}`,
@@ -27,12 +28,14 @@ export const metadata: Metadata = {
     title: `${SITE.name} — ${SITE.tagline}`,
     description:
       "Hospedagens, passeios de barco, mergulho e experiências em Arraial do Cabo, de fornecedores locais verificados.",
-    images: ["/img/og.png"],
+    url: OFFICIAL_SITE_URL,
+    images: [{ url: `${OFFICIAL_SITE_URL}/img/og.png`, alt: SITE.name }],
     locale: "pt_BR",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
+    images: [`${OFFICIAL_SITE_URL}/img/og.png`],
   },
 };
 
