@@ -26,8 +26,11 @@ export default async function HomePage() {
   // que, por exemplo, um passeio de buggy apareça na vitrine de embarcações.
   const boatTourCards = tours.filter((tour) => tour.kind === "boat_tour").slice(0, 4).map(tourToCard);
   const experienceCards = tours.filter((tour) => tour.kind !== "boat_tour").slice(0, 4).map(tourToCard);
-  const stayCategories = categories.filter((c) => c.kind === "stay");
-  const tourCategories = categories.filter((c) => c.kind === "tour");
+  const stayCategorySlugs = new Set(stays.map((stay) => stay.categorySlug));
+  const tourCategorySlugs = new Set(tours.map((tour) => tour.categorySlug));
+  const stayCategories = categories.filter((c) => c.kind === "stay" && stayCategorySlugs.has(c.slug));
+  const tourCategories = categories.filter((c) => c.kind === "tour" && tourCategorySlugs.has(c.slug));
+  const visibleCategories = [...stayCategories, ...tourCategories];
 
   return (
     <div>
@@ -62,9 +65,9 @@ export default async function HomePage() {
       </section>
 
       {/* CATEGORIAS */}
-      {categories.length > 0 && (
-        <section className="container-x py-7 sm:py-8">
-          <h2 className="section-title mb-4 text-2xl sm:text-3xl">Explore por categoria</h2>
+      {visibleCategories.length > 0 && (
+        <section className="container-x py-5 sm:py-6">
+          <h2 className="section-title mb-3 text-2xl sm:text-3xl">Explore por categoria</h2>
           <div className="flex flex-wrap gap-2.5">
             {[...stayCategories, ...tourCategories].map((c) => (
               <CategoryTile
