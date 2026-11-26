@@ -36,27 +36,30 @@ export default async function HomePage() {
   return (
     <div>
       {/* HERO */}
-      <section className="relative min-h-[620px] overflow-hidden sm:min-h-[680px]">
+      <section className="relative min-h-[650px] overflow-hidden sm:min-h-[700px] lg:min-h-[720px]">
         <HeroVideo />
-        <div className="absolute inset-0 bg-gradient-to-b from-oceano-950/60 via-oceano-900/25 to-oceano-950/75" />
-        <div className="container-x relative flex flex-col items-center gap-6 py-24 text-center sm:py-32">
-          <p className="kicker text-turquesa-300">Arraial do Cabo · Rio de Janeiro</p>
-          <h1 className="max-w-3xl font-display text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">
-            Seu lugar no paraíso — e o barco para chegar lá
-          </h1>
-          <p className="max-w-xl text-base text-oceano-100 sm:text-lg">
-            Hospedagens selecionadas, passeios de barco e experiências com os melhores fornecedores
-            locais de Arraial do Cabo.
+        <div className="absolute inset-0 bg-gradient-to-b from-oceano-950/30 via-transparent to-oceano-950/55" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_48%,rgba(7,30,44,0.78)_0%,rgba(7,30,44,0.48)_34%,transparent_68%)]" />
+        <div className="container-x relative flex min-h-[650px] flex-col items-center justify-center gap-5 py-20 text-center sm:min-h-[700px] sm:gap-6 sm:py-24 lg:min-h-[720px] lg:items-start lg:text-left">
+          <p className="inline-flex max-w-full items-center justify-center gap-2 rounded-full border border-white/25 bg-oceano-950/25 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-turquesa-200 backdrop-blur-sm sm:px-4 sm:text-xs sm:tracking-[0.2em]">
+            <span className="h-1.5 w-1.5 rounded-full bg-turquesa-300 shadow-[0_0_12px_rgba(120,212,200,0.9)]" />
+            Arraial do Cabo · Rio de Janeiro
           </p>
-          <div className="w-full max-w-2xl">
+          <h1 className="w-full max-w-4xl text-balance font-display text-[2.3rem] font-medium leading-[1.03] tracking-[-0.035em] text-white drop-shadow-[0_2px_18px_rgba(7,30,44,0.28)] sm:text-6xl lg:max-w-3xl lg:text-7xl">
+            Sua viagem para <span className="font-semibold italic text-turquesa-200">Arraial do Cabo</span> começa aqui na Vívian Tour
+          </h1>
+          <p className="w-full max-w-2xl text-pretty text-base font-medium leading-relaxed text-white/90 drop-shadow-sm sm:text-lg lg:max-w-xl">
+            Hospedagens selecionadas, passeios de barco e experiências com a melhor agência de turismo de Arraial do Cabo.
+          </p>
+          <div className="w-full max-w-2xl lg:max-w-3xl">
             <SearchBar />
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="flex max-w-3xl flex-wrap items-center justify-center gap-2 lg:justify-start">
             {QUICK_LINKS.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}
-                className="rounded-full border border-white/30 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-white backdrop-blur transition hover:bg-white/20"
+                className="rounded-full border border-white/30 bg-oceano-950/20 px-3.5 py-1.5 text-xs font-semibold text-white backdrop-blur-sm transition hover:border-turquesa-200/70 hover:bg-white/15"
               >
                 {link.label}
               </Link>

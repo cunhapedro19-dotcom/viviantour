@@ -53,7 +53,7 @@ export function HeroVideo() {
   return (
     <video
       ref={videoRef}
-      className="absolute inset-0 h-full w-full object-cover"
+      className="absolute inset-0 h-full w-full object-cover saturate-[1.14] contrast-[1.06] brightness-[1.04]"
       src={src ?? undefined}
       poster={poster}
       autoPlay
