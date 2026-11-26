@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Artwork } from "@/components/Artwork";
 import { ListingCard } from "@/components/ListingCard";
 import { SearchBar } from "@/components/site/SearchBar";
+import { HeroVideo } from "@/components/site/HeroVideo";
 import { StarRating } from "@/components/StarRating";
 import { DEMO_MODE } from "@/lib/config";
 import { stayToCard, tourToCard } from "@/lib/card";
@@ -35,9 +36,9 @@ export default async function HomePage() {
   return (
     <div>
       {/* HERO */}
-      <section className="relative overflow-hidden">
-        <Artwork seed="hero-1" alt="Mar de Arraial do Cabo" className="absolute inset-0 h-full w-full object-cover" eager />
-        <div className="absolute inset-0 bg-gradient-to-b from-oceano-950/60 via-oceano-900/35 to-oceano-950/70" />
+      <section className="relative min-h-[620px] overflow-hidden sm:min-h-[680px]">
+        <HeroVideo />
+        <div className="absolute inset-0 bg-gradient-to-b from-oceano-950/60 via-oceano-900/25 to-oceano-950/75" />
         <div className="container-x relative flex flex-col items-center gap-6 py-24 text-center sm:py-32">
           <p className="kicker text-turquesa-300">Arraial do Cabo · Rio de Janeiro</p>
           <h1 className="max-w-3xl font-display text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">
