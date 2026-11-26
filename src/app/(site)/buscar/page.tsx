@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { ListingCard } from "@/components/ListingCard";
 import { FilterPanel } from "@/components/site/FilterPanel";
 import { stayToCard, tourToCard } from "@/lib/card";
-import { getHomeData, searchListings, type SearchFilters } from "@/lib/queries";
+import { getHomeData, groupStaysByRegion, searchListings, type SearchFilters } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +36,18 @@ export default async function BuscarPage({ searchParams }: Props) {
 
   const showStays = !filters.tipo || filters.tipo === "stay";
   const showTours = !filters.tipo || filters.tipo === "tour";
+  const stayGroups = groupStaysByRegion(result.stays);
+  const allStaysUrl = (region: string) => {
+    const params = new URLSearchParams();
+    params.set("tipo", "stay");
+    params.set("regiao", region);
+    if (filters.q) params.set("q", filters.q);
+    if (filters.categoria) params.set("categoria", filters.categoria);
+    if (filters.pessoas) params.set("pessoas", String(filters.pessoas));
+    if (filters.ordem && filters.ordem !== "relevancia") params.set("ordem", filters.ordem);
+    if (filters.beachfront) params.set("beachfront", "true");
+    return `/buscar?${params.toString()}`;
+  };
 
   return (
     <div className="container-x py-8">
@@ -64,17 +76,29 @@ export default async function BuscarPage({ searchParams }: Props) {
         </div>
       ) : (
         <div className="mt-10 space-y-12">
-          {showStays && result.stays.length > 0 && (
-            <section>
-              <h2 className="section-title mb-5">
-                Hospedagens <span className="text-base font-normal text-tinta-mute">({result.stays.length})</span>
-              </h2>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {result.stays.map((stay) => (
-                  <ListingCard key={stay.id} data={stayToCard(stay)} />
-                ))}
-              </div>
-            </section>
+          {showStays && stayGroups.length > 0 && (
+            <div className="space-y-12">
+              {stayGroups.map((group) => {
+                const visibleStays = filters.regiao ? group.stays : group.stays.slice(0, 4);
+                const hasMore = group.stays.length > visibleStays.length;
+                return (
+                  <section key={group.key} aria-labelledby={`region-${group.key}`}>
+                    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+                      <div>
+                        <h2 id={`region-${group.key}`} className="section-title">
+                          {group.label} <span className="text-base font-normal text-tinta-mute">({group.stays.length})</span>
+                        </h2>
+                        <p className="mt-1 text-sm text-tinta-mute">Hospedagens disponíveis nesta localização</p>
+                      </div>
+                      {hasMore && <a href={allStaysUrl(group.key)} className="btn-outline btn-sm">Ver todas</a>}
+                    </div>
+                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                      {visibleStays.map((stay) => <ListingCard key={stay.id} data={stayToCard(stay)} />)}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
           )}
           {showTours && result.tours.length > 0 && (
             <section>
