@@ -20,7 +20,10 @@ export function AnalyticsProvider() {
     return () => { document.removeEventListener("click", onClick); document.removeEventListener("change", onChange); };
   }, [consent, ready, pathname]);
   if (!GA_MEASUREMENT_ID || consent !== "granted") return null;
-  return <Script id="vivian-ga4" strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} onLoad={() => { window.dataLayer = window.dataLayer || []; window.gtag = (...args) => window.dataLayer?.push(args); window.gtag("js", new Date()); window.gtag("consent", "default", { analytics_storage: "denied", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied", wait_for_update: 500 }); window.gtag("consent", "update", { analytics_storage: "granted", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" }); window.gtag("config", GA_MEASUREMENT_ID, { anonymize_ip: true, send_page_view: false }); setReady(true); }} />;
+  return <>
+    <Script id="vivian-ga4-init" strategy="afterInteractive">{`window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){window.dataLayer.push(arguments)};window.gtag("js",new Date());window.gtag("consent","default",{analytics_storage:"denied",ad_storage:"denied",ad_user_data:"denied",ad_personalization:"denied",wait_for_update:500});window.gtag("config","${GA_MEASUREMENT_ID}",{anonymize_ip:true,send_page_view:false});`}</Script>
+    <Script id="vivian-ga4" strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} onLoad={() => { window.gtag?.("consent", "update", { analytics_storage: "granted", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" }); setReady(true); }} />
+  </>;
 }
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
