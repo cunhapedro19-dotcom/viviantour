@@ -13,7 +13,7 @@ import { formatBRL } from "@/lib/format";
 export const metadata: Metadata = {
   title: "Seja um parceiro Viviantourr",
   description:
-    "Anuncie sua hospedagem, embarcação ou experiência turística em Arraial do Cabo com painel próprio, calendário e gestão de reservas.",
+    "Anuncie sua hospedagem, embarca��o ou experi�ncia tur�stica em Arraial do Cabo com painel pr�prio, calend�rio e gest�o de reservas.",
 };
 
 export default async function AnunciePage() {
@@ -27,11 +27,11 @@ export default async function AnunciePage() {
         <div className="container-x relative py-20">
           <p className="kicker text-turquesa-300">Para fornecedores</p>
           <h1 className="mt-2 max-w-2xl font-display text-4xl font-semibold leading-tight text-white">
-            Sua operação, seu painel — a visibilidade é por nossa conta
+            Sua opera��o, seu painel - a visibilidade � por nossa conta
           </h1>
           <p className="mt-4 max-w-xl text-oceano-100">
-            Hospedagens, embarcações, passeios e experiências: publique em minutos e gerencie tudo
-            em um lugar só.
+            Hospedagens, embarca��es, passeios e experi�ncias: publique em minutos e gerencie tudo
+            em um lugar s�.
           </p>
         </div>
       </section>
@@ -41,15 +41,15 @@ export default async function AnunciePage() {
           {[
             {
               t: "1. Crie sua conta",
-              d: "Escolha o perfil de Proprietário (hospedagens) ou Prestador de serviços (passeios, embarcações e experiências). O cadastro comercial é aprovado pela curadoria Viviantourr.",
+              d: "Escolha o perfil de Propriet�rio (hospedagens) ou Prestador de servi�os (passeios, embarca��es e experi�ncias). O cadastro comercial � aprovado pela curadoria Viviantourr.",
             },
             {
-              t: "2. Publique seus anúncios",
-              d: "Fotos, descrições, comodidades, tarifas, regras, capacidade e calendário. Operadores criam saídas com datas, horários e vagas controladas.",
+              t: "2. Publique seus an�ncios",
+              d: "Fotos, descri��es, comodidades, tarifas, regras, capacidade e calend�rio. Operadores criam sa�das com datas, hor�rios e vagas controladas.",
             },
             {
               t: "3. Receba e gerencie reservas",
-              d: "Solicitações chegam no seu painel com notificação. Aceite, recuse ou cancele — e acompanhe faturamento e comissões em tempo real.",
+              d: "Solicita��es chegam no seu painel com notifica��o. Aceite, recuse ou cancele - e acompanhe faturamento e comiss�es em tempo real.",
             },
           ].map((s) => (
             <div key={s.t} className="card p-6">
@@ -61,19 +61,19 @@ export default async function AnunciePage() {
 
         <div className="mt-12 grid gap-6 lg:grid-cols-2">
           <div className="card p-7">
-            <h2 className="section-title text-xl">Para proprietários</h2>
+            <h2 className="section-title text-xl">Para propriet�rios</h2>
             <ul className="mt-4 space-y-3 text-sm text-tinta-soft">
               <li className="flex gap-2.5">
-                <Check /> Cadastro ilimitado de imóveis na mesma conta
+                <Check /> Cadastro ilimitado de im�veis na mesma conta
               </li>
               <li className="flex gap-2.5">
-                <Check /> Calendário com bloqueios manuais e tarifas por temporada
+                <Check /> Calend�rio com bloqueios manuais e tarifas por temporada
               </li>
               <li className="flex gap-2.5">
-                <Check /> Sincronização iCal com o Airbnb (e outros calendários) — URLs privadas, protegidas no servidor
+                <Check /> Sincroniza��o iCal com o Airbnb (e outros calend�rios) - URLs privadas, protegidas no servidor
               </li>
               <li className="flex gap-2.5">
-                <Check /> Histórico de hóspedes e avaliações
+                <Check /> Hist�rico de h�spedes e avalia��es
               </li>
             </ul>
           </div>
@@ -81,16 +81,16 @@ export default async function AnunciePage() {
             <h2 className="section-title text-xl">Para operadores e guias</h2>
             <ul className="mt-4 space-y-3 text-sm text-tinta-soft">
               <li className="flex gap-2.5">
-                <Check /> Cadastro de embarcações e passeios com roteiro e ponto de embarque
+                <Check /> Cadastro de embarca��es e passeios com roteiro e ponto de embarque
               </li>
               <li className="flex gap-2.5">
-                <Check /> Agenda operacional: saídas, capacidade, bloqueios e preço por saída
+                <Check /> Agenda operacional: sa�das, capacidade, bloqueios e pre�o por sa�da
               </li>
               <li className="flex gap-2.5">
                 <Check /> Controle de vagas em tempo real, sem overbooking
               </li>
               <li className="flex gap-2.5">
-                <Check /> Lista de passageiros por saída
+                <Check /> Lista de passageiros por sa�da
               </li>
             </ul>
           </div>
@@ -104,9 +104,9 @@ export default async function AnunciePage() {
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-tinta-soft">
             {modelAppliesCommission(monetization.model) && (
               <>
-                Comissão vigente: <strong>{monetization.percent}%</strong> sobre cada reserva
+                Comiss�o vigente: <strong>{monetization.percent}%</strong> sobre cada reserva
                 confirmada
-                {modelAppliesMonthlyFee(monetization.model) && <> · </>}
+                {modelAppliesMonthlyFee(monetization.model) && <> � </>}
               </>
             )}
             {modelAppliesMonthlyFee(monetization.model) && (
@@ -115,33 +115,33 @@ export default async function AnunciePage() {
                 <strong>
                   {formatBRL(monetization.monthlyFeeCents)}
                 </strong>{" "}
-                por mês
+                por m�s
               </>
             )}
             {monetization.model === "free" && (
-              <>Sem comissão, sem mensalidade, sem taxa de publicação.</>
+              <>Sem comiss�o, sem mensalidade, sem taxa de publica��o.</>
             )}
             {monetization.model !== "free" && (
               <>
                 {" "}
                 A regra pode variar por acordo comercial com fornecedores, e sempre aparece
-                discriminada no seu painel financeiro: valor bruto, comissão e valor líquido.
+                discriminada no seu painel financeiro: valor bruto, comiss�o e valor l�quido.
               </>
             )}
           </p>
           <p className="mt-3 max-w-3xl text-xs text-tinta-mute">
-            Pagamentos online e repasses automáticos serão habilitados em uma fase seguinte, com
-            gateway parceiro e divisão de recebíveis. Até lá, o combinado financeiro é feito
-            diretamente entre você e o cliente, com todo o registro salvo na plataforma.
+            Pagamentos online e repasses autom�ticos ser�o habilitados em uma fase seguinte, com
+            gateway parceiro e divis�o de receb�veis. At� l�, o combinado financeiro � feito
+            diretamente entre voc� e o cliente, com todo o registro salvo na plataforma.
           </p>
         </div>
 
         <div className="mt-12 text-center">
-          <Link href="/cadastro" className="btn-primary">
-            Criar minha conta de fornecedor
+          <Link href="/cadastro?role=owner&next=%2Fanuncie%2Fpropriedade" className="btn-primary">
+            Enviar minha propriedade para an�lise
           </Link>
           <p className="mt-3 text-xs text-tinta-mute">
-            Dúvidas? Fale com a gente: contato@viviantourr.com.br
+            D�vidas? Fale com a gente: contato@viviantourr.com.br
           </p>
         </div>
       </section>
@@ -156,3 +156,4 @@ function Check() {
     </svg>
   );
 }
+

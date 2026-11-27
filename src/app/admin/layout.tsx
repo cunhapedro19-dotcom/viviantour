@@ -11,10 +11,11 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 const NAV = [
   { href: "/admin", label: "Dashboard geral", exact: true },
   { href: "/admin/fornecedores", label: "Fornecedores" },
-  { href: "/admin/anuncios", label: "Anúncios" },
+  { href: "/admin/solicitacoes-propriedade", label: "Im�veis para curadoria" },
+  { href: "/admin/anuncios", label: "An�ncios" },
   { href: "/admin/combos", label: "Combos e pacotes" },
   { href: "/admin/reservas", label: "Reservas" },
-  { href: "/admin/configuracoes", label: "Configurações" },
+  { href: "/admin/configuracoes", label: "Configura��es" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -82,7 +83,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex min-h-screen items-center justify-center bg-areia-50">
         <div className="text-center">
           <Logo />
-          <p className="mt-4 text-sm text-tinta-mute">Verificando credenciais…</p>
+          <p className="mt-4 text-sm text-tinta-mute">Verificando credenciais.</p>
         </div>
       </div>
     );
@@ -94,8 +95,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="card max-w-md p-8 text-center">
           <h1 className="font-display text-xl font-semibold text-tinta">Acesso restrito</h1>
           <p className="mt-2 text-sm text-tinta-mute">
-            Esta área é exclusiva da administração Viviantourr. Para virar administrador no modo
-            real, rode o SQL de promoção presente no arquivo seed.sql.
+            Esta �rea � exclusiva da administra��o Viviantourr. Para virar administrador no modo
+            real, rode o SQL de promo��o presente no arquivo seed.sql.
           </p>
           <Link href="/" className="btn-outline btn-sm mt-5">
             Voltar ao site
@@ -110,7 +111,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className="border-b border-areia-200 bg-tinta lg:min-h-screen lg:w-64 lg:shrink-0 lg:border-b-0">
         <div className="p-4">
           <Logo light />
-          <p className="mt-1 text-xs text-oceano-200">Administração master</p>
+          <p className="mt-1 text-xs text-oceano-200">Administra��o master</p>
         </div>
         <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:mt-2 lg:flex-col lg:pb-6" aria-label="Menu administrativo">
           {NAV.map((item) => {
@@ -130,7 +131,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
         <div className="hidden border-t border-tinta-soft p-4 lg:block">
           <Link href="/" className="text-xs font-medium text-turquesa-300 hover:underline">
-            ← Ver o marketplace
+             Ver o marketplace
           </Link>
           <button type="button" onClick={signOut} className="mt-3 block text-xs text-oceano-200 hover:text-white">
             Sair da conta
@@ -155,3 +156,4 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
+
