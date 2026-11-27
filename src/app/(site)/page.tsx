@@ -69,11 +69,10 @@ export default async function HomePage() {
       </section>
 
       {/* CATEGORIAS */}
-      {visibleCategories.length > 0 && (
-        <section className="container-x py-5 sm:py-6">
-          <h2 className="section-title mb-3 text-2xl sm:text-3xl">Explore por categoria</h2>
-          <div className="flex flex-wrap gap-2.5">
-            {[...stayCategories, ...tourCategories].map((c) => (
+      <section className="container-x py-5 sm:py-6">
+        <h2 className="section-title mb-3 text-2xl sm:text-3xl">Explore por categoria</h2>
+        <div className="flex flex-wrap gap-2.5">
+          {[...stayCategories, ...tourCategories].map((c) => (
               <CategoryTile
                 key={`${c.kind}-${c.id}`}
                 slug={c.slug}
@@ -81,10 +80,18 @@ export default async function HomePage() {
                 icon={c.icon}
                 kind={c.kind}
               />
-            ))}
-          </div>
-        </section>
-      )}
+          ))}
+          <Link
+            href="/combos"
+            className="group inline-flex items-center gap-2 rounded-full border border-areia-200 bg-white px-3 py-2 text-center shadow-card transition hover:-translate-y-0.5 hover:border-turquesa-300 hover:shadow-pop sm:px-3.5"
+          >
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-oceano-50 text-sm transition group-hover:bg-turquesa-50">
+              🎁
+            </span>
+            <span className="text-xs font-semibold leading-tight text-tinta-soft group-hover:text-oceano-700">Combos</span>
+          </Link>
+        </div>
+      </section>
 
       {/* HOSPEDAGENS EM DESTAQUE */}
       <section className="container-x py-6">
