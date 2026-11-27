@@ -71,6 +71,8 @@ Para restaurar o backup, extrair `working-tree.zip` em diretório separado e con
 
 ## Publicação e rollback
 
+A verificação com Chrome isolado identificou overflow de 6 px a 768 px no rodapé: o e-mail era mais largo que sua coluna. Foi adicionada quebra de palavra somente ao item do e-mail, preservando texto, grade e identidade visual. O build local confirmou `scrollWidth = innerWidth = 768` depois da correção; o teste responsivo não foi relaxado para aceitar o defeito.
+
 Atualizar referências remotas e comparar com `origin/main`. Publicar somente arquivos revisados, sem `git add .` sobre trabalho pendente de outras operações. Integrar a recuperação a `main` de forma não destrutiva, enviar e acompanhar o CI e o deployment do SHA exato no projeto `viviantour` existente.
 
 Confirmar o estado Ready, commit, ambiente Production e domínios no dashboard. Fazer requisições HTTP, conferir DOM desktop/mobile, erros de console, acentuação e WhatsApp. Validar rotas sem criar cadastros, reservas, alterações de calendário ou anúncios reais.
