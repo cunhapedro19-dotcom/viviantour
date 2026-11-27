@@ -4,8 +4,9 @@
   "private": true,
   "description": "Viviantourr — marketplace de turismo multi-fornecedor de Arraial do Cabo, RJ",
   "scripts": {
+    "check:encoding": "node scripts/check-text-encoding.mjs",
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run check:encoding && next build",
     "start": "next start",
     "typecheck": "tsc --noEmit"
   },

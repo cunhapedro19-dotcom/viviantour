@@ -44,7 +44,7 @@ returns integer language plpgsql security definer set search_path = public as $$
 declare n integer;
 begin
   perform 1 from public.external_calendars where id = p_id and sync_token = p_token and active for update;
-  if not found then raise exception 'Sincroniza��o expirada ou calend�rio desconectado'; end if;
+  if not found then raise exception 'Sincronização expirada ou calendário desconectado'; end if;
   insert into public.calendar_events(external_calendar_id, uid, summary, starts_at, ends_at, all_day, status)
   select p_id, e.uid, e.summary, e.starts_at, e.ends_at, e.all_day, e.status
   from jsonb_to_recordset(p_events) as e(uid text, summary text, starts_at timestamptz, ends_at timestamptz, all_day boolean, status text)

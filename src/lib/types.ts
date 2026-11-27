@@ -107,9 +107,9 @@ export interface Tour {
   itinerary: { order: number; title: string; description?: string }[];
   included: string[];
   pricePerPersonCents: number;
-  /** Define se o valor � individual ou fechado para um grupo. */
+  /** Define se o valor é individual ou fechado para um grupo. */
   priceMode?: TourPriceMode;
-  /** Pessoas inclu�das no valor fechado do grupo. */
+  /** Pessoas incluídas no valor fechado do grupo. */
   priceGroupSize?: number | null;
   /** Taxas e condições apresentadas junto ao valor no pedido. */
   priceNotes?: string[];
