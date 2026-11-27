@@ -37,6 +37,7 @@ export function Footer() {
           <ul className="space-y-2 text-sm text-tinta-soft">
             <li>{SITE.city} · {SITE.state}, Brasil</li>
             <li>{SITE.supportEmail}</li>
+            <li>Agência de turismo cadastrada no Cadastur</li>
           </ul>
         </div>
       </div>
