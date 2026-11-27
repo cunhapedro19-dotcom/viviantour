@@ -27,3 +27,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local recovery copies, evidence and downloaded media; never publish these.
+/.codex-temp/
+/.codex-audit-tmp-phase2/
+/.phase4-checkpoint/
+/.claude/worktrees/
+/visual-validation/
+/casa-oceano-airbnb/
+/casa-serena-airbnb/
+/flor-do-sal-airbnb/
+/casa-oceano-contact.jpg
+/test-results/
+/playwright-report/
+__pycache__/
