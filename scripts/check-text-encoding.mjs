@@ -7,6 +7,7 @@ const files = execFileSync(
   { encoding: "utf8" },
 )
   .split("\0")
+  .filter((file) => file !== "scripts/check-text-encoding.mjs")
   .filter((file) => /\.(?:[cm]?[jt]sx?|json|md|css|html|ya?ml|toml)$/i.test(file));
 
 const suspicious = /\uFFFD|(?:Ã[\u0080-\u00BF]|Â[\u0080-\u00BF]|â€[\u0080-\u00BF]|ðŸ)/;
