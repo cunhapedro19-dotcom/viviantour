@@ -40,7 +40,20 @@ export function StayInquiryWidget({ name, phone, blockedDates, availabilityError
   return <div className="card sticky top-24 overflow-hidden">
     <div className="border-b border-areia-200 bg-areia-50 px-5 py-4"><h2 className="font-semibold text-tinta">Consulte esta hospedagem</h2><p className="mt-1 text-xs text-tinta-mute">Preencha os dados da viagem para enviar uma mensagem pronta.</p></div>
     <div className="space-y-4 p-5">
-      <div><p className="label">Escolha check-in e check-out na agenda</p>{availabilityError ? <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Não foi possível carregar a disponibilidade desta hospedagem. Tente novamente mais tarde.</p> : <><CalendarMonth blockedDates={blocked} checkIn={checkIn} checkOut={checkOut} onPick={pickDate} maxDate={maxDate} /><div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-tinta-mute">{availabilityUnconfirmed ? <span className="text-amber-700">• Datas sujeitas à confirmação da equipe</span> : <span>• Datas livres</span>}<span className="text-areia-400">• Ocupadas ou indisponíveis</span></div>{availabilityUnconfirmed && <p className="mt-2 rounded-xl bg-amber-50 p-3 text-xs text-amber-800">Informe o período desejado e consulte a disponibilidade com nossa equipe pelo WhatsApp.</p>}</>}<p className="mt-2 text-xs text-tinta-soft">Check-in: {checkIn ? format(new Date(`${checkIn}T12:00:00`), "dd/MM/yyyy") : "selecione uma data"} · Check-out: {checkOut ? format(new Date(`${checkOut}T12:00:00`), "dd/MM/yyyy") : "selecione uma data"}</p></div>
+      <div>
+        <p className="label">Escolha check-in e check-out na agenda</p>
+        {availabilityError ? <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Não foi possível carregar a disponibilidade desta hospedagem. Tente novamente mais tarde.</p> : <>
+          <CalendarMonth blockedDates={blocked} checkIn={checkIn} checkOut={checkOut} onPick={pickDate} maxDate={maxDate} />
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-tinta-mute">
+            {availabilityUnconfirmed ? <span className="text-amber-700">• Datas sujeitas à confirmação da equipe</span> : <span>• Sem bloqueio na agenda</span>}
+            <span className="text-areia-400">• Ocupadas ou indisponíveis</span>
+          </div>
+          <p className="mt-2 rounded-xl bg-amber-50 p-3 text-xs text-amber-800">{availabilityUnconfirmed
+            ? "Informe o período desejado e consulte a disponibilidade com nossa equipe pelo WhatsApp."
+            : "Datas sem bloqueio estão sujeitas à confirmação. Consulte a disponibilidade com nossa equipe pelo WhatsApp."}</p>
+        </>}
+        <p className="mt-2 text-xs text-tinta-soft">Check-in: {checkIn ? format(new Date(`${checkIn}T12:00:00`), "dd/MM/yyyy") : "selecione uma data"} · Check-out: {checkOut ? format(new Date(`${checkOut}T12:00:00`), "dd/MM/yyyy") : "selecione uma data"}</p>
+      </div>
       <div className="grid grid-cols-2 gap-3"><div><label className="label" htmlFor="stay-adults">Adultos</label><select id="stay-adults" className="input" value={adults} onChange={(e) => setAdults(Number(e.target.value))}>{Array.from({ length: capacity }, (_, i) => i + 1).map((n) => <option key={n}>{n}</option>)}</select></div><div><label className="label" htmlFor="stay-kids">Crianças</label><select id="stay-kids" className="input" value={children} onChange={(e) => setChildren(Number(e.target.value))}>{Array.from({ length: capacity + 1 }, (_, i) => i).map((n) => <option key={n}>{n}</option>)}</select></div></div>
       {nights > 0 && nights < minNights && <p className="text-xs text-red-700">Estadia mínima: {minNights} noite(s).</p>}{guests > capacity && <p className="text-xs text-red-700">Esta hospedagem acomoda até {capacity} pessoas.</p>}{unavailable && <p className="text-xs text-red-700">Há datas ocupadas nesse período. Escolha outras datas.</p>}
       {showPublicPrices && nights > 0 && !unavailable && <p className="rounded-xl bg-areia-50 px-3 py-2 text-sm text-tinta-soft">Valor estimado das diárias: <strong className="text-tinta">{formatBRL(estimatedTotal)}</strong><span className="block text-xs text-tinta-mute">Inclui {nights} noite(s); taxas extras, se houver, são confirmadas no atendimento.</span></p>}

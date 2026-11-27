@@ -55,11 +55,19 @@ export function usePanelUser(allowed: Role[] = ["owner", "provider", "admin"]) {
 
       const { data: membership } = await sb
         .from("organization_members")
-        .select("organization:organizations(id,name)")
-        .eq("profile_id", authUser.id)
-        .limit(1);
+        .select("member_role,organization:organizations(id,name,kind)")
+        .eq("profile_id", authUser.id);
 
-      const org = (membership?.[0] as { organization?: { id: string; name: string } } | undefined)?.organization;
+      type Membership = {
+        member_role: "owner" | "manager" | "staff";
+        organization?: { id: string; name: string; kind: "host" | "operator" } | null;
+      };
+      const expectedKind = role === "owner" ? "host" : role === "provider" ? "operator" : null;
+      const matches = ((membership ?? []) as Membership[])
+        .filter((item) => item.organization && (!expectedKind || item.organization.kind === expectedKind));
+      const rank = { owner: 0, manager: 1, staff: 2 };
+      matches.sort((a, b) => rank[a.member_role] - rank[b.member_role]);
+      const org = matches[0]?.organization;
 
       if (!active) return;
       setUser({

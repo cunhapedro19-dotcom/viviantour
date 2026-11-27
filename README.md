@@ -278,5 +278,4 @@ Tipografia: **Fraunces** (títulos) + **Manrope** (interface). Mobile-first.
 ---
 
 Feito com carinho para o turismo de Arraial do Cabo. Bons ventos! ⛵
-#   v i v i a n t o u r  
- 
+# viviantour

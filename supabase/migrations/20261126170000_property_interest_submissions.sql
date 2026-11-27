@@ -26,9 +26,9 @@ alter table public.property_interest_submissions enable row level security;
 revoke all on public.property_interest_submissions from anon, authenticated;
 grant select on public.property_interest_submissions to authenticated;
 grant update (status, admin_note) on public.property_interest_submissions to authenticated;
-create policy "curadoria l� solicita��es" on public.property_interest_submissions
+create policy "curadoria lê solicitações" on public.property_interest_submissions
   for select to authenticated using (public.is_admin());
-create policy "curadoria atualiza solicita��es" on public.property_interest_submissions
+create policy "curadoria atualiza solicitações" on public.property_interest_submissions
   for update to authenticated using (public.is_admin()) with check (public.is_admin());
 
 create or replace function public.submit_property_interest(p_submission jsonb)
@@ -80,4 +80,3 @@ create policy "owner uploads submission photos" on storage.objects
   );
 
 commit;
-
