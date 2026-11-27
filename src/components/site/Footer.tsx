@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { CadasturTrust } from "@/components/site/CadasturTrust";
 import { SITE } from "@/lib/config";
 
 export function Footer() {
@@ -37,8 +38,8 @@ export function Footer() {
           <ul className="space-y-2 text-sm text-tinta-soft">
             <li>{SITE.city} · {SITE.state}, Brasil</li>
             <li className="break-words">{SITE.supportEmail}</li>
-            <li>Agência de turismo cadastrada no Cadastur</li>
           </ul>
+          <CadasturTrust variant="footer" />
         </div>
       </div>
       <div className="border-t border-areia-200">

@@ -3,6 +3,7 @@ import { Artwork } from "@/components/Artwork";
 import { ListingCard } from "@/components/ListingCard";
 import { SearchBar } from "@/components/site/SearchBar";
 import { HeroVideo } from "@/components/site/HeroVideo";
+import { CadasturTrust } from "@/components/site/CadasturTrust";
 import { StarRating } from "@/components/StarRating";
 import { DEMO_MODE } from "@/lib/config";
 import { stayToCard, tourToCard } from "@/lib/card";
@@ -184,8 +185,9 @@ export default async function HomePage() {
 
       {/* POR QUE VIVIANTOURR */}
       <section className="bg-areia-100 py-14">
-        <div className="container-x grid gap-8 md:grid-cols-3">
-          {[
+        <div className="container-x">
+          <div className="grid gap-8 md:grid-cols-3">
+            {[
             {
               title: "Fornecedores locais verificados",
               text: "Todo proprietário e operador passa pela aprovação da Viviantourr antes de publicar. Você reserva com quem vive e cuida de Arraial.",
@@ -205,19 +207,21 @@ export default async function HomePage() {
                 <path d="M12 21s-7.5-4.7-10-9.3C.4 8.6 2.4 4.5 6.2 4.5c2.2 0 3.7 1.2 4.8 2.7l1 1.4 1-1.4c1.1-1.5 2.6-2.7 4.8-2.7 3.8 0 5.8 4.1 4.2 7.2C19.5 16.3 12 21 12 21z" />
               ),
             },
-          ].map((f) => (
-            <div key={f.title} className="flex gap-4">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white shadow-card">
-                <svg viewBox="0 0 24 24" className="h-6 w-6 fill-turquesa-500">
-                  {f.icon}
-                </svg>
-              </span>
-              <div>
-                <h3 className="font-semibold text-tinta">{f.title}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-tinta-mute">{f.text}</p>
+            ].map((f) => (
+              <div key={f.title} className="flex gap-4">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white shadow-card">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6 fill-turquesa-500">
+                    {f.icon}
+                  </svg>
+                </span>
+                <div>
+                  <h3 className="font-semibold text-tinta">{f.title}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-tinta-mute">{f.text}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          <CadasturTrust variant="home" />
         </div>
       </section>
 
